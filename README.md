@@ -31,6 +31,8 @@ the search term "keyb", that will match case insensitive the device name. Only a
 
 That way, dvorak will be called whenever an input device is attached.
 
+From here, ensure that your first keyboard layout is set to Qwerty and your second layout is Dvorak.
+
 ## Related Links
 I used the following sites for inspiration:
 
