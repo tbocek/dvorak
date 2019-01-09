@@ -31,6 +31,8 @@ the search term "keyb", that will match case insensitive the device name. Only a
 
 That way, dvorak will be called whenever an input device is attached.
 
+From here, ensure that your first keyboard layout is set to Qwerty and your second layout is Dvorak.
+
 ## Not a matching device: [xyz]
 
 If you see the above message in syslog or journalctl, it means that your keyboard device name does not have the string "keyb" (case insensitive) in it. For example, ```Not a matching device: [Logitech K360]```. In order to make it work with your device, in dvorak@.service, you can call be the executable with
