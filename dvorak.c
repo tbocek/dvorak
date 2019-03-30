@@ -71,6 +71,7 @@
 #include <linux/uinput.h>
 #include <string.h>
 #include <stdio.h>
+#include <X11/XKBlib.h>
 
 static const char *const evval[3] = {
         "RELEASED",
@@ -78,7 +79,7 @@ static const char *const evval[3] = {
         "REPEATED"
 };
 
-int emit(int fd, int type, int code, int val) {
+static int emit(int fd, int type, int code, int val) {
     struct input_event ie;
     ie.type = type;
     ie.code = code;
@@ -180,6 +181,46 @@ static int qwerty2dvorak(int key) {
             return 26;
     }
     return key;
+}
+
+static int isDvorakLayout() {
+
+    //get keyboard layout, heavily inspired by:
+    //https://github.com/luminousmen/xkblang/blob/master/src/xkblang.c
+    Display *d;
+
+    //check keyboard layout preparation
+    if (!(d = XOpenDisplay(NULL))) {
+        fprintf(stderr, "cannot open display\n");
+        return EXIT_FAILURE;
+    }
+
+    XkbDescPtr keyboard = XkbAllocKeyboard();
+    if (!keyboard) {
+        fprintf(stderr, "Error creating keyboard description");
+        return EXIT_FAILURE;
+    }
+
+    if (XkbGetNames(d, XkbGroupNamesMask, keyboard) != Success ) {
+        fprintf(stderr, "Error obtaining symbolic names");
+        return EXIT_FAILURE;
+    }
+
+    XkbStateRec state;
+    if( XkbGetState(d, XkbUseCoreKbd, &state) != Success ) {
+        fprintf(stderr, "Error getting keyboard state");
+        return EXIT_FAILURE;
+    }
+
+    char *name =  XGetAtomName(d, keyboard->names->groups[state.group]);
+
+    printf( "%s\n", name);
+
+    XFree(name);
+    XkbFreeNames(keyboard, XkbGroupNamesMask, True);
+    //free up: https://gist.github.com/fikovnik/ef428e82a26774280c4fdf8f96ce8eeb
+    XCloseDisplay(d);
+    return 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -319,6 +360,9 @@ int main(int argc, char *argv[]) {
         if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
             //printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
             //map the keys
+
+            //isDvorakLayout();
+
             mod_current = modifier_bit(ev.code);
             if (mod_current > 0) {
                 if (ev.value == 1) { //pressed
