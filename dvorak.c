@@ -71,6 +71,7 @@
 #include <linux/uinput.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <X11/XKBlib.h>
 
 static const char *const evval[3] = {
@@ -185,7 +186,13 @@ static int qwerty2dvorak(int key) {
 
 static int isDvorakLayout() {
 
-    //get keyboard layout, heavily inspired by:
+    //preferred method for getting the layout change is via
+    //org.gnome.desktop.input-sources, however, they have
+    //deprecated that, thus, using the xkb variant. There
+    //is some delay detecting the layout...
+    //https://github.com/Azq2/gnome-alt-shift-kbd-layout-switcher/blob/master/main.c
+
+    //get keyboard layout, xbb variant heavily inspired by:
     //https://github.com/luminousmen/xkblang/blob/master/src/xkblang.c
     Display *d;
 
@@ -214,13 +221,19 @@ static int isDvorakLayout() {
 
     char *name =  XGetAtomName(d, keyboard->names->groups[state.group]);
 
-    printf( "%s\n", name);
+    //printf( "%s\n", name);
 
-    XFree(name);
     XkbFreeNames(keyboard, XkbGroupNamesMask, True);
     //free up: https://gist.github.com/fikovnik/ef428e82a26774280c4fdf8f96ce8eeb
     XCloseDisplay(d);
-    return 1;
+
+    if (strcasestr(name, "dvorak") != NULL) {
+        XFree(name);
+        return true;
+    } else {
+        XFree(name);
+        return false;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -300,11 +313,6 @@ int main(int argc, char *argv[]) {
     //grab the key, from the input
     //https://unix.stackexchange.com/questions/126974/where-do-i-find-ioctl-eviocgrab-documented/126996
 
-    //fix is implemented, will make it to ubuntu sometimes in 1.9.4
-    //https://bugs.freedesktop.org/show_bug.cgi?id=101796
-    //quick workaround, sleep for 200ms...
-    usleep(200 * 1000);
-
     if (ioctl(fdi, EVIOCGRAB, 1) == -1) {
         fprintf(stderr, "Cannot grab key: %s.\n", strerror(errno));
         return EXIT_FAILURE;
@@ -349,19 +357,24 @@ int main(int argc, char *argv[]) {
         n = read(fdi, &ev, sizeof ev);
         if (n == (ssize_t) - 1) {
             if (errno == EINTR) {
+                printf( "error\n");
                 continue;
             } else {
+                printf( "error?\n");
                 break;
             }
         } else if (n != sizeof ev) {
+            printf( "errer2\n");
             errno = EIO;
             break;
         }
-        if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
-            //printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
-            //map the keys
 
-            //isDvorakLayout();
+        if (!isDvorakLayout()) {
+            printf( "Not Dvorak Layout\n");
+            emit(fdo, ev.type, ev.code, ev.value);
+        } else if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
+            printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
+            //map the keys
 
             mod_current = modifier_bit(ev.code);
             if (mod_current > 0) {
@@ -374,7 +387,7 @@ int main(int argc, char *argv[]) {
 
             if (ev.code != qwerty2dvorak(ev.code) && (mod_state > 0 || array_counter > 0)) {
                 code = ev.code;
-                //printf("dvorak %d, %d\n", array_counter, mod_state);
+                printf("dvorak %d, %d\n", array_counter, mod_state);
                 if (ev.value == 1) { //pressed
                     if (array_counter == MAX_LENGTH) {
                         printf("warning, too many keys pressed: %d. %s 0x%04x (%d), arr:%d\n",
@@ -410,11 +423,11 @@ int main(int argc, char *argv[]) {
                 }
                 emit(fdo, ev.type, code, ev.value);
             } else {
-                //printf("non dvorak %d\n", array_counter);
+                printf("non dvorak %d\n", array_counter);
                 emit(fdo, ev.type, ev.code, ev.value);
             }
         } else {
-            //printf("Not key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
+            printf("Not key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
             emit(fdo, ev.type, ev.code, ev.value);
         }
     }

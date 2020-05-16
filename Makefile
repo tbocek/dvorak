@@ -9,12 +9,6 @@ default: $(TARGET)
 all: default
 
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
-
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-.PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
@@ -27,6 +21,6 @@ install:
 	cp $(TARGET) /usr/bin/
 	cp 80-dvorak.rules /etc/udev/rules.d/
 	cp dvorak@.service /etc/systemd/system/
-	sudo udevadm control --reload
-	sudo systemctl restart udev.service
+	udevadm control --reload
+	systemctl restart systemd-udevd.service
 	systemctl daemon-reload
