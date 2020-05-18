@@ -72,7 +72,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <X11/XKBlib.h>
+//#include <X11/XKBlib.h>
 
 static const char *const evval[3] = {
         "RELEASED",
@@ -194,7 +194,7 @@ static int isDvorakLayout() {
 
     //get keyboard layout, xbb variant heavily inspired by:
     //https://github.com/luminousmen/xkblang/blob/master/src/xkblang.c
-    Display *d;
+    /*Display *d;
 
     //check keyboard layout preparation
     if (!(d = XOpenDisplay(NULL))) {
@@ -233,7 +233,11 @@ static int isDvorakLayout() {
     } else {
         XFree(name);
         return false;
-    }
+    }*/
+
+    //Running into issue dvorak[41400]: cannot open display
+    //disabling for the moment
+    return true;
 }
 
 int main(int argc, char *argv[]) {
@@ -350,8 +354,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Cannot create device: %s.\n", strerror(errno));
         return EXIT_FAILURE;
     }
-
-    //TODO: clear array
 
     while (1) {
         n = read(fdi, &ev, sizeof ev);

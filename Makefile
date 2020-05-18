@@ -1,5 +1,5 @@
 TARGET = dvorak
-LIBS = -lm -lX11
+LIBS = -lm
 CC = gcc
 CFLAGS = -g -Wall
 
