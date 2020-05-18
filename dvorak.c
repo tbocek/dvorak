@@ -357,23 +357,23 @@ int main(int argc, char *argv[]) {
         n = read(fdi, &ev, sizeof ev);
         if (n == (ssize_t) - 1) {
             if (errno == EINTR) {
-                printf( "error\n");
+                //printf( "error\n");
                 continue;
             } else {
-                printf( "error?\n");
+                //printf( "error2\n");
                 break;
             }
         } else if (n != sizeof ev) {
-            printf( "errer2\n");
+            //printf( "error3\n");
             errno = EIO;
             break;
         }
 
         if (!isDvorakLayout()) {
-            printf( "Not Dvorak Layout\n");
+            //printf( "Not Dvorak Layout\n");
             emit(fdo, ev.type, ev.code, ev.value);
         } else if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
-            printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
+            //printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
             //map the keys
 
             mod_current = modifier_bit(ev.code);
@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
 
             if (ev.code != qwerty2dvorak(ev.code) && (mod_state > 0 || array_counter > 0)) {
                 code = ev.code;
-                printf("dvorak %d, %d\n", array_counter, mod_state);
+                //printf("dvorak %d, %d\n", array_counter, mod_state);
                 if (ev.value == 1) { //pressed
                     if (array_counter == MAX_LENGTH) {
                         printf("warning, too many keys pressed: %d. %s 0x%04x (%d), arr:%d\n",
@@ -423,11 +423,11 @@ int main(int argc, char *argv[]) {
                 }
                 emit(fdo, ev.type, code, ev.value);
             } else {
-                printf("non dvorak %d\n", array_counter);
+                //printf("non dvorak %d\n", array_counter);
                 emit(fdo, ev.type, ev.code, ev.value);
             }
         } else {
-            printf("Not key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
+            //printf("Not key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
             emit(fdo, ev.type, ev.code, ev.value);
         }
     }
