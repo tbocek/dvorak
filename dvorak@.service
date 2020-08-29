@@ -5,4 +5,4 @@ Description=Dvorak Virtual Keyboard
 ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360 k750
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target

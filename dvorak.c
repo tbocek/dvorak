@@ -72,7 +72,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-//#include <X11/XKBlib.h>
+#include <X11/XKBlib.h>
 
 static const char *const evval[3] = {
         "RELEASED",
@@ -194,11 +194,13 @@ static int isDvorakLayout() {
 
     //get keyboard layout, xbb variant heavily inspired by:
     //https://github.com/luminousmen/xkblang/blob/master/src/xkblang.c
-    /*Display *d;
+    Display *d;
 
     //check keyboard layout preparation
-    if (!(d = XOpenDisplay(NULL))) {
-        fprintf(stderr, "cannot open display\n");
+    const char *value = getenv("DISPLAY");
+    if (!(d = XOpenDisplay(value ? value : ":0"))) {
+        fprintf(stderr, "cannot open display %s\n",
+                getenv("DISPLAY") ? getenv("DISPLAY") : "(default)");
         return EXIT_FAILURE;
     }
 
@@ -208,19 +210,18 @@ static int isDvorakLayout() {
         return EXIT_FAILURE;
     }
 
-    if (XkbGetNames(d, XkbGroupNamesMask, keyboard) != Success ) {
+    if (XkbGetNames(d, XkbGroupNamesMask, keyboard) != Success) {
         fprintf(stderr, "Error obtaining symbolic names");
         return EXIT_FAILURE;
     }
 
     XkbStateRec state;
-    if( XkbGetState(d, XkbUseCoreKbd, &state) != Success ) {
+    if (XkbGetState(d, XkbUseCoreKbd, &state) != Success) {
         fprintf(stderr, "Error getting keyboard state");
         return EXIT_FAILURE;
     }
 
-    char *name =  XGetAtomName(d, keyboard->names->groups[state.group]);
-
+    char *name = XGetAtomName(d, keyboard->names->groups[state.group]);
     //printf( "%s\n", name);
 
     XkbFreeNames(keyboard, XkbGroupNamesMask, True);
@@ -233,11 +234,7 @@ static int isDvorakLayout() {
     } else {
         XFree(name);
         return false;
-    }*/
-
-    //Running into issue dvorak[41400]: cannot open display
-    //disabling for the moment
-    return true;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -316,6 +313,12 @@ int main(int argc, char *argv[]) {
 
     //grab the key, from the input
     //https://unix.stackexchange.com/questions/126974/where-do-i-find-ioctl-eviocgrab-documented/126996
+
+    //https://bugs.freedesktop.org/show_bug.cgi?id=101796
+    //the bug in the above tracker was fixed, but I still run into this issue, so sleep a bit to not have stuck
+    //keys when EVIOCGRAB is called
+    //quick workaround, sleep for 200ms...
+    usleep(200 * 1000);
 
     if (ioctl(fdi, EVIOCGRAB, 1) == -1) {
         fprintf(stderr, "Cannot grab key: %s.\n", strerror(errno));
