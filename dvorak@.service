@@ -2,7 +2,7 @@
 Description=Dvorak Virtual Keyboard
 
 [Service]
-ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360 k750
+ExecStart=/usr/local/sbin/dvorak.sh /dev/input/%i keyb k360 k750
 
 [Install]
 WantedBy=graphical.target
