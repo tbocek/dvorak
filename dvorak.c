@@ -67,11 +67,14 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <linux/input.h>
 #include <linux/uinput.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
+
+int isDvorak=false;
+time_t start=0;
 
 static const char *const evval[3] = {
         "RELEASED",
@@ -184,6 +187,13 @@ static int qwerty2dvorak(int key) {
 }
 
 static int isDvorakLayout() {
+    //only call every 3 seconds
+    const time_t end = time(NULL);
+    const int elapsed = end - start;
+    if(elapsed < 3) {
+        return isDvorak;
+    }
+    start = time(NULL);
 
     //https://stackoverflow.com/questions/308695/how-do-i-concatenate-const-literal-strings-in-c
     //build the command
@@ -207,11 +217,11 @@ static int isDvorakLayout() {
     pclose(cmd);
 
     if (strcasestr(buf, "dvorak") != NULL) {
-        return true;
+        isDvorak = true;
     } else {
-       return false;
+        isDvorak = false;
     }
-
+    return isDvorak;
     //IDEA: use gdbus directly
     //similar to: https://github.com/lyokha/g3kb-switch/blob/21115f4feba34a47a89cf0a93378364a31b7ec94/switch.c
     //or https://github.com/agurk/assorted/blob/fbf7c05c221c0df0ce58d285a05c4c3d058c906d/keyboard-switcher/keyswitch_options.c
