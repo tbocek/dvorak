@@ -71,10 +71,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <time.h>
-
-int isDvorak=false;
-time_t start=0;
 
 static const char *const evval[3] = {
         "RELEASED",
@@ -186,52 +182,6 @@ static int qwerty2dvorak(int key) {
     return key;
 }
 
-static int isDvorakLayout() {
-    //only call every 3 seconds
-    const time_t end = time(NULL);
-    const int elapsed = end - start;
-    if(elapsed < 3) {
-        return isDvorak;
-    }
-    start = time(NULL);
-
-    //https://stackoverflow.com/questions/308695/how-do-i-concatenate-const-literal-strings-in-c
-    //build the command
-    char buf[256];
-    char *user = getenv("SUDO_USER");
-
-    //https://unix.stackexchange.com/questions/316998/how-to-change-keyboard-layout-in-gnome-3-from-command-line
-    //https://askubuntu.com/questions/1134629/manipulate-the-default-shortcut-superspace-for-switching-to-next-input-source-w
-    //https://itectec.com/ubuntu/ubuntu-how-to-not-show-keyboard-layout-chooser-popup-when-changing-language-in-gnome-3/
-    snprintf(buf, sizeof buf, "/usr/bin/su %s -c '/usr/bin/gdbus call "
-                              "--session "
-                              "--dest org.gnome.Shell "
-                              "--object-path /org/gnome/Shell "
-                              "--method org.gnome.Shell.Eval  "
-                              "\"imports.ui.status.keyboard.getInputSourceManager().currentSource.id\"'", user);
-
-    //fprintf(stderr, "cmd: [%s]\n", buf);
-
-    FILE *cmd = popen(buf, "r");
-    fgets(buf, sizeof buf, cmd);
-    pclose(cmd);
-
-    if (strcasestr(buf, "dvorak") != NULL) {
-        isDvorak = true;
-    } else {
-        isDvorak = false;
-    }
-    return isDvorak;
-    //IDEA: use gdbus directly
-    //similar to: https://github.com/lyokha/g3kb-switch/blob/21115f4feba34a47a89cf0a93378364a31b7ec94/switch.c
-    //or https://github.com/agurk/assorted/blob/fbf7c05c221c0df0ce58d285a05c4c3d058c906d/keyboard-switcher/keyswitch_options.c
-    //or https://stackoverflow.com/questions/36167457/dbus-call-in-c-from-shell-dbus-send
-    //ref: https://developer.gnome.org/gio/stable/GDBusProxy.html#g-dbus-proxy-new-for-bus-sync
-    //and https://developer.gnome.org/gio/stable/GDBusConnection.html#g-bus-get-sync
-    //more infos: https://dbus.freedesktop.org/doc/dbus-launch.1.html
-    //but since we run with sudo, this may need some more setup
-}
-
 int main(int argc, char *argv[]) {
 
     setuid(0);
@@ -249,6 +199,8 @@ int main(int argc, char *argv[]) {
     const char MAX_LENGTH = 32;
     int array[MAX_LENGTH];
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
+    int isDvorak=false;
+    int lAlt=0;
 
     //the name and ids of the virtual keyboard, we need to define this now, as we need to ignore this to prevent
     //mapping the virtual keyboard
@@ -268,13 +220,13 @@ int main(int argc, char *argv[]) {
     //get first input
     fdi = open(argv[1], O_RDONLY);
     if (fdi < 0) {
-        fprintf(stderr, "Cannot open any of the devices: %s.\n", strerror(errno));
+        fprintf(stderr, "Cannot open any of the devices [%s]: %s.\n", argv[1], strerror(errno));
         return EXIT_FAILURE;
     }
     //
     name_ret = ioctl(fdi, EVIOCGNAME(sizeof(keyboard_name) - 1), keyboard_name);
     if (name_ret < 0) {
-        fprintf(stderr, "Cannot get device name: %s.\n", strerror(errno));
+        fprintf(stderr, "Cannot get device name [%s]: %s.\n", keyboard_name, strerror(errno));
         return EXIT_FAILURE;
     }
 
@@ -415,12 +367,24 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        if (!isDvorakLayout()) {
-            //printf( "Not Dvorak Layout\n");
-            emit(fdo, ev.type, ev.code, ev.value);
+        //if l-alt is pressed 3 times, the dvorak mapping is disabled, if it is
+        //again pressed 3 times, it will be enabled again
+        if (ev.code == 56) {
+            if(ev.value == 1 && ++lAlt >= 3) {
+                isDvorak = !isDvorak;
+                lAlt = 0;
+                printf("mapping is set to [%s]\n", !isDvorak ? "true" : "false");
+            }
+        } else if (ev.type == EV_KEY) {
+            lAlt = 0;
+        }
+
+        if(isDvorak) {
+            if(emit(fdo, ev.type, ev.code, ev.value) < 0) {
+                fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
+            }
         } else if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
             //printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
-            //map the keys
 
             mod_current = modifier_bit(ev.code);
             if (mod_current > 0) {
