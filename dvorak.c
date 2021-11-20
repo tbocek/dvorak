@@ -29,7 +29,7 @@
  * keys and remap the keys from "Dvorak" to "Querty" once CTRL, ALT,
  * WIN or any of those combinations are pressed.
  *
- * With X.org I was reling on the wonderful tool from Kenton Varda,
+ * With X.org I was relying on the wonderful tool from Kenton Varda,
  * which I modified a bit, to make it work when Numlock is active. Other
  * than that, it worked as expected.
  *
@@ -72,11 +72,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-static const char *const evval[3] = {
-        "RELEASED",
-        "PRESSED",
-        "REPEATED"
-};
+#define MAX_LENGTH 16
 
 static int emit(int fd, int type, int code, int val) {
     struct input_event ie;
@@ -93,114 +89,168 @@ static int emit(int fd, int type, int code, int val) {
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int modifier_bit(int key) {
     switch (key) {
-        case 29:
-            return 1;     // l-ctrl
-        case 97:
-            return 2;     // r-ctrl
-        case 56:
-            return 4;     // l-alt
-        case 125:
-            return 8;   // win
+        case KEY_LEFTCTRL:
+            return 1;
+        case KEY_RIGHTCTRL:
+            return 2;
+        case KEY_LEFTALT:
+            return 4;
+        case KEY_LEFTMETA:
+            return 8;
     }
     return 0;
+}
+
+static int umlaut2dvorak(int key) {
+    switch (key) {
+        case KEY_A:
+            return KEY_X;
+        case KEY_X:
+            return KEY_A;
+        case KEY_S:
+            return KEY_R;
+        case KEY_R:
+            return KEY_S;
+        case KEY_F:
+            return KEY_T;
+        case KEY_T:
+            return KEY_F;
+        default:
+            return key;
+    }
 }
 
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
-        case 12:
-            return 40;
-        case 13:
-            return 27;
-        case 16:
-            return 45;
-        case 17:
-            return 51;
-        case 18:
-            return 32;
-        case 19:
-            return 24;
-        case 20:
-            return 37;
-        case 21:
-            return 20;
-        case 22:
-            return 33;
-        case 23:
-            return 34;
-        case 24:
-            return 31;
-        case 25:
-            return 19;
-        case 26:
-            return 12;
-        case 27:
-            return 13;
-        case 30:
-            return 30;
-        case 31:
-            return 39;
-        case 32:
-            return 35;
-        case 33:
-            return 21;
-        case 34:
-            return 22;
-        case 35:
-            return 36;
-        case 36:
-            return 46;
-        case 37:
-            return 47;
-        case 38:
-            return 25;
-        case 39:
-            return 44;
-        case 40:
-            return 16;
-        case 44:
-            return 53;
-        case 45:
-            return 48;
-        case 46:
-            return 23;
-        case 47:
-            return 52;
-        case 48:
-            return 49;
-        case 49:
-            return 38;
-        case 50:
-            return 50;
-        case 51:
-            return 17;
-        case 52:
-            return 18;
-        case 53:
-            return 26;
+        case KEY_MINUS:
+            return KEY_APOSTROPHE;
+        case KEY_EQUAL:
+            return KEY_RIGHTBRACE;
+        case KEY_Q:
+            return KEY_X;
+        case KEY_W:
+            return KEY_COMMA;
+        case KEY_E:
+            return KEY_D;
+        case KEY_R:
+            return KEY_O;
+        case KEY_T:
+            return KEY_K;
+        case KEY_Y:
+            return KEY_T;
+        case KEY_U:
+            return KEY_F;
+        case KEY_I:
+            return KEY_G;
+        case KEY_O:
+            return KEY_S;
+        case KEY_P:
+            return KEY_R;
+        case KEY_LEFTBRACE:
+            return KEY_MINUS;
+        case KEY_RIGHTBRACE:
+            return KEY_EQUAL;
+        case KEY_A:
+            return KEY_A;
+        case KEY_S:
+            return KEY_SEMICOLON;
+        case KEY_D:
+            return KEY_H;
+        case KEY_F:
+            return KEY_Y;
+        case KEY_G:
+            return KEY_U;
+        case KEY_H:
+            return KEY_J;
+        case KEY_J:
+            return KEY_C;
+        case KEY_K:
+            return KEY_V;
+        case KEY_L:
+            return KEY_P;
+        case KEY_SEMICOLON:
+            return KEY_Z;
+        case KEY_APOSTROPHE:
+            return KEY_Q;
+        case KEY_Z:
+            return KEY_SLASH;
+        case KEY_X:
+            return KEY_B;
+        case KEY_C:
+            return KEY_I;
+        case KEY_V:
+            return KEY_DOT;
+        case KEY_B:
+            return KEY_N;
+        case KEY_N:
+            return KEY_L;
+        case KEY_M:
+            return KEY_M;
+        case KEY_COMMA:
+            return KEY_W;
+        case KEY_DOT:
+            return KEY_E;
+        case KEY_SLASH:
+            return KEY_LEFTBRACE;
+        default:
+            return key;
     }
-    return key;
+}
+
+void usage(const char *path) {
+    /* take only the last portion of the path */
+    const char *basename = strrchr(path, '/');
+    basename = basename ? basename + 1 : path;
+
+    fprintf(stderr, "usage: %s [OPTION]\n", basename);
+    fprintf(stderr, "  -u\t\t"
+                    "Enable Umlaut mapping.\n");
+    fprintf(stderr, "  -d /dev/input/by-id/...\t"
+                    "Specifies which device should be captured.\n");
+    fprintf(stderr, "  -m STRING\t"
+                    "Match only the STRING with the USB device name. STRING can contain multiple "
+                    "words, separated by space.\n");
 }
 
 int main(int argc, char *argv[]) {
 
     setuid(0);
 
-    if (argc < 2) {
-        fprintf(stderr, "error: specify input device, e.g., found in "
-                        "/dev/input/by-id/.\n");
+    struct input_event ev;
+    ssize_t n;
+    int fdi, fdo, i, mod_current, code, name_ret, mod_state = 0, array_qwerty_counter = 0, array_umlaut_counter = 0, lAlt = 0, opt;
+    bool alt_gr = false, isDvorak = false, isUmlaut = false;
+    struct uinput_setup usetup;
+
+    int array_qwerty[MAX_LENGTH] = {0}, array_umlaut[MAX_LENGTH] = {0};
+    char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
+
+    char *device = NULL;
+    char *match = NULL;
+    while ((opt = getopt(argc, argv, "ud:m:")) != -1) {
+        switch (opt) {
+            case 'u':
+                isUmlaut = true;
+                break;
+            case 'd':
+                device = optarg;
+                break;
+            case 'm':
+                match = optarg;
+                break;
+            case '?':
+                usage(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
+    if (device == NULL) {
+        usage(argv[0]);
+        fprintf(stderr, "\nerror: specify input device, e.g., found in /dev/input/by-id/...\n");
         return EXIT_FAILURE;
     }
 
-    struct input_event ev;
-    ssize_t n;
-    int fdi, fdo, i, mod_state, mod_current, array_counter, code, name_ret;
-    struct uinput_setup usetup;
-    const char MAX_LENGTH = 32;
-    int array[MAX_LENGTH];
-    char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
-    int isDvorak=false;
-    int lAlt=0;
 
     //the name and ids of the virtual keyboard, we need to define this now, as we need to ignore this to prevent
     //mapping the virtual keyboard
@@ -210,17 +260,10 @@ int main(int argc, char *argv[]) {
     usetup.id.product = 0x1;
     strcpy(usetup.name, "Virtual Dvorak Keyboard");
 
-    //init states
-    mod_state = 0;
-    array_counter = 0;
-    for (i = 0; i < MAX_LENGTH; i++) {
-        array[i] = 0;
-    }
-
     //get first input
-    fdi = open(argv[1], O_RDONLY);
+    fdi = open(device, O_RDONLY);
     if (fdi < 0) {
-        fprintf(stderr, "Cannot open any of the devices [%s]: %s.\n", argv[1], strerror(errno));
+        fprintf(stderr, "Cannot open any of the devices [%s]: %s.\n", device, strerror(errno));
         return EXIT_FAILURE;
     }
     //
@@ -230,6 +273,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    if(strcmp(keyboard_name, "Virtual Dvorak Keyboard") == 0) {
+        return EXIT_SUCCESS;
+    }
+
     if (strcasestr(keyboard_name, usetup.name) != NULL) {
         fprintf(stderr, "Cannot get map the virtual device: %s.\n", keyboard_name);
         return EXIT_FAILURE;
@@ -237,15 +284,18 @@ int main(int argc, char *argv[]) {
 
     // match names, reuse name_ret
     name_ret = -1;
-    for (i = 2; i < argc; i++) {
-        if (strcasestr(keyboard_name, argv[i]) != NULL) {
+
+    char *token = strtok(match, " ");
+    while (token != NULL) {
+        if (strcasestr(keyboard_name, token) != NULL) {
             printf("found input: [%s]\n", keyboard_name);
             name_ret = 0;
             break;
         }
+        token = strtok(NULL, " ");
     }
     if (name_ret < 0) {
-        fprintf(stderr, "Not a matching device: [%s]\n", keyboard_name);
+        fprintf(stderr, "Not a matching device: [%s] does not match these words: [%s]\n", keyboard_name, match);
         return EXIT_FAILURE;
     }
 
@@ -353,24 +403,22 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         n = read(fdi, &ev, sizeof ev);
-        if (n == (ssize_t) - 1) {
+
+        //check if we read the proper size
+        if (n == (ssize_t) -1) {
             if (errno == EINTR) {
-                //printf( "error\n");
                 continue;
             } else {
-                //printf( "error2\n");
                 break;
             }
         } else if (n != sizeof ev) {
-            //printf( "error3\n");
-            errno = EIO;
             break;
         }
 
         //if l-alt is pressed 3 times, the dvorak mapping is disabled, if it is
         //again pressed 3 times, it will be enabled again
         if (ev.code == 56) {
-            if(ev.value == 1 && ++lAlt >= 3) {
+            if (ev.value == 1 && ++lAlt >= 3) {
                 isDvorak = !isDvorak;
                 lAlt = 0;
                 printf("mapping is set to [%s]\n", !isDvorak ? "true" : "false");
@@ -379,70 +427,132 @@ int main(int argc, char *argv[]) {
             lAlt = 0;
         }
 
-        if(isDvorak) {
-            if(emit(fdo, ev.type, ev.code, ev.value) < 0) {
+        if (isDvorak) {
+            if (emit(fdo, ev.type, ev.code, ev.value) < 0) {
                 fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
             }
-        } else if (ev.type == EV_KEY && ev.value >= 0 && ev.value <= 2) {
-            //printf("%s 0x%04x (%d), arr:%d\n", evval[ev.value], (int)ev.code, (int)ev.code, array_counter);
+        } else if (ev.type == EV_KEY && (ev.value == 0 || ev.value == 1)) {
+            //printf("%s 0x%04x (%d)\n", ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code);
+
+            //Umlaute mapping - since I want r-alt to produce umlauts without modifying
+            if (ev.code == KEY_RIGHTALT) {
+                if (ev.value == 1) { //pressed
+                    alt_gr = true;
+                } else { //released
+                    alt_gr = false;
+                }
+            }
 
             mod_current = modifier_bit(ev.code);
             if (mod_current > 0) {
                 if (ev.value == 1) { //pressed
                     mod_state |= mod_current;
-                } else if (ev.value == 0) {//released
+                } else {//released
                     mod_state &= ~mod_current;
                 }
             }
 
-            if (ev.code != qwerty2dvorak(ev.code) && (mod_state > 0 || array_counter > 0)) {
+            //The " and ¨, as well as ' and ´ should be swapped when using international dvorak layout
+            if (isUmlaut && ev.code == KEY_Q) {
+                if (ev.value == 1) { //pressed
+                    if (!alt_gr) {
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 1);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    } else {
+                        //if it was pressed, release it immediately, we can see a double release, but this is ok
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    }
+                    emit(fdo, EV_KEY, ev.code, 1);
+                } else {
+                    if (!alt_gr) {
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    }
+                    emit(fdo, EV_KEY, ev.code, 0);
+                }
+            } else if (isUmlaut && ev.code != umlaut2dvorak(ev.code) && (alt_gr || array_umlaut_counter > 0)) {
+                code = ev.code;
+                if (ev.value == 1) { //pressed
+                    if (array_umlaut_counter == MAX_LENGTH) {
+                        printf("warning, too many keys pressed: %d. %s 0x%04x (%d), arr:%d\n",
+                               MAX_LENGTH, ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code,
+                               array_umlaut_counter);
+                        //skip dvorak mapping
+                    } else {
+                        array_umlaut[array_umlaut_counter++] = ev.code + 1; //0 means not mapped
+                        code = umlaut2dvorak(ev.code); // dvorak mapping
+                        printf("SWI %d\n", code);
+                    }
+                } else {
+                    for (i = 0; i < array_umlaut_counter; i++) {
+                        if (array_umlaut[i] == ev.code + 1) {
+                            //found it, map it!
+                            array_umlaut[i] = 0;
+                            code = umlaut2dvorak(ev.code); // dvorak mapping
+                        }
+                    }
+                    //cleanup array counter
+                    for (i = array_umlaut_counter - 1; i >= 0; i--) {
+                        if (array_umlaut[i] == 0) {
+                            array_umlaut_counter--;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                if (emit(fdo, ev.type, code, ev.value) < 0) {
+                    fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
+                }
+            } else if (ev.code != qwerty2dvorak(ev.code) && (mod_state > 0 || array_qwerty_counter > 0)) {
                 code = ev.code;
                 //printf("dvorak %d, %d\n", array_counter, mod_state);
                 if (ev.value == 1) { //pressed
-                    if (array_counter == MAX_LENGTH) {
+                    if (array_qwerty_counter == MAX_LENGTH) {
                         printf("warning, too many keys pressed: %d. %s 0x%04x (%d), arr:%d\n",
-                               MAX_LENGTH, evval[ev.value], (int) ev.code, (int) ev.code, array_counter);
+                               MAX_LENGTH, ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code,
+                               array_qwerty_counter);
                         //skip dvorak mapping
                     } else {
-                        array[array_counter] = ev.code + 1; //0 means not mapped
-                        array_counter++;
+                        array_qwerty[array_qwerty_counter++] = ev.code + 1; //0 means not mapped
                         code = qwerty2dvorak(ev.code); // dvorak mapping
                     }
-                } else if (ev.value == 0) { //released
+                } else { //released
                     //now we need to check if the code is in the array
                     //if it is, then the pressed key was in dvorak mode and
                     //we need to remove it from the array. The ctrl or alt
                     //key does not need to be pressed, when a key is released.
                     //A previous implementation only had a counter, which resulted
                     //occasionally in stuck keys.
-                    for (i = 0; i < array_counter; i++) {
-                        if (array[i] == ev.code + 1) {
+                    for (i = 0; i < array_qwerty_counter; i++) {
+                        if (array_qwerty[i] == ev.code + 1) {
                             //found it, map it!
-                            array[i] = 0;
+                            array_qwerty[i] = 0;
                             code = qwerty2dvorak(ev.code); // dvorak mapping
                         }
                     }
                     //cleanup array counter
-                    for (i = array_counter - 1; i >= 0; i--) {
-                        if (array[i] == 0) {
-                            array_counter--;
+                    for (i = array_qwerty_counter - 1; i >= 0; i--) {
+                        if (array_qwerty[i] == 0) {
+                            array_qwerty_counter--;
                         } else {
                             break;
                         }
                     }
                 }
-                if(emit(fdo, ev.type, code, ev.value) < 0) {
+
+                if (emit(fdo, ev.type, code, ev.value) < 0) {
                     fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
                 }
             } else {
                 //printf("non dvorak %d\n", array_counter);
-                if(emit(fdo, ev.type, ev.code, ev.value) < 0) {
+                if (emit(fdo, ev.type, ev.code, ev.value) < 0) {
                     fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
                 }
             }
         } else {
             //printf("Not key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
-            if(emit(fdo, ev.type, ev.code, ev.value) < 0) {
+            if (emit(fdo, ev.type, ev.code, ev.value) < 0) {
                 fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
             }
         }

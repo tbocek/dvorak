@@ -1,6 +1,4 @@
-/dvorak
-/dvorak.o
-/.cproject
-/.project
-/.settings/
+dvorak
+dvorak.o
+.project
 .idea

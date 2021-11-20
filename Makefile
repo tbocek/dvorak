@@ -3,17 +3,14 @@
 #https://stackoverflow.com/questions/51269129/minimal-gdbus-client
 TARGET = dvorak
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -Wall -O3
 
-.PHONY: default all clean
+.PHONY: default all clean install uninstall
 
-default: $(TARGET)
-all: default
+default: all
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@
+all: dvorak.c
+	$(CC) $(CFLAGS) -o $(TARGET) dvorak.c
 
 clean:
 	-rm -f *.o
@@ -21,7 +18,6 @@ clean:
 
 install:
 	cp dvorak /usr/local/bin/
-	cp dvorak.sh /usr/local/sbin/
 	cp 80-dvorak.rules /etc/udev/rules.d/
 	cp dvorak@.service /etc/systemd/system/
 	udevadm control --reload
@@ -30,7 +26,6 @@ install:
 
 uninstall:
 	rm /usr/local/bin/dvorak
-	rm /usr/local/sbin/dvorak.sh
 	rm /etc/udev/rules.d/80-dvorak.rules
 	rm /etc/systemd/system/dvorak@.service
 	udevadm control --reload
