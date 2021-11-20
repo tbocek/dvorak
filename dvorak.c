@@ -204,13 +204,14 @@ void usage(const char *path) {
     basename = basename ? basename + 1 : path;
 
     fprintf(stderr, "usage: %s [OPTION]\n", basename);
-    fprintf(stderr, "  -u\t\t"
+    fprintf(stderr, "  -u\t\t\t"
                     "Enable Umlaut mapping.\n");
-    fprintf(stderr, "  -d /dev/input/by-id/...\t"
+    fprintf(stderr, "  -d /dev/input/by-id/…\t"
                     "Specifies which device should be captured.\n");
-    fprintf(stderr, "  -m STRING\t"
-                    "Match only the STRING with the USB device name. STRING can contain multiple "
-                    "words, separated by space.\n");
+    fprintf(stderr, "  -m STRING\t\t"
+                    "Match only the STRING with the USB device name. \n"
+                    "\t\t\tSTRING can contain multiple words, separated by space.\n\n");
+    fprintf(stderr, "example: %s -u -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m \"k750 k350\"\n", basename);
 }
 
 int main(int argc, char *argv[]) {
@@ -432,7 +433,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
             }
         } else if (ev.type == EV_KEY && (ev.value == 0 || ev.value == 1)) {
-            //printf("%s 0x%04x (%d)\n", ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code);
+            printf("%s 0x%04x (%d)\n", ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code);
 
             //Umlaute mapping - since I want r-alt to produce umlauts without modifying
             if (ev.code == KEY_RIGHTALT) {
@@ -453,7 +454,8 @@ int main(int argc, char *argv[]) {
             }
 
             //The " and ¨, as well as ' and ´ should be swapped when using international dvorak layout
-            if (isUmlaut && ev.code == KEY_Q) {
+            //The same goes for `(deadkey) and `(non-deadkey)
+            if (isUmlaut && (ev.code == KEY_Q || ev.code == KEY_GRAVE)) {
                 if (ev.value == 1) { //pressed
                     if (!alt_gr) {
                         emit(fdo, EV_KEY, KEY_RIGHTALT, 1);
