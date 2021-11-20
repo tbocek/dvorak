@@ -1,22 +1,16 @@
-# Dvorak <> Qwerty - Keyboard remapping for Linux when pressing CTRL or ALT
+# Dvorak <> Qwerty - Keyboard remapping for Linux when pressing L-CTRL, L-ALT, or L-WIN
 
-Since I type with the "Dvorak" keyboard layout, the shortcuts such as ctrl-c, ctrl-x, or ctrl-v are 
-not comfortable anymore for the left hand. And even one of them require two hands to press.
+Since I type with the "Dvorak" keyboard layout, the shortcuts such as ctrl-c, ctrl-x, or ctrl-v are not comfortable anymore for using the left hand only.
 
-Furthermore, applications such as Intellij have their shortcuts, which I'm used to. So 
-for these shortcuts I prefer "Querty". Since there is no way to configure this, it is necessary to intercept the keys and remap the keys from "Dvorak" to "Querty" when pressing CTRL, ALT, WIN or any of those combinations.
+Furthermore, many applications have their default shortcuts, which I'm used to. So for these shortcuts I prefer "Querty". Since there is no way to configure this, this program intercept these keys and remap them from "Dvorak" to "Querty" when pressing L-CTRL, L-ALT, L-WIN, or any of those combinations.
    
-With X.org I was relying on the wonderful project from Kenton Varda. And then came Wayland. 
+With X11 I was relying on the [xdq](https://github.com/kentonv/dvorak-qwerty) from Kenton Varda. However, this does not work reliably with Wayland.
 
-## Keyboard remapping with dvorak that works reliably with Wayland - make ctrl-c ctrl-c again
+## Keyboard remapping with dvorak that works reliably with Wayland - make ctrl-c ctrl-c again (and not ctrl-i)
 
-XGrabKey() works partially with some application but not with others (e.g., gedit is not working). Since XGrabKey() is an X.org function with some support in Wayland, I was looking for a more stable solution. After a quick look to this [repo](https://github.com/kentonv/dvorak-qwerty), I saw that Kenton added a systemtap script to implement the mapping. It scared me a bit to follow that path, so I implemented an other solution based on /dev/uinput. The idea is to read /dev/input, grab keys with EVIOCGRAB, create a virtual device that can emit the keys and pass the keys from /dev/input to /dev/uinput. If CTRL/ALT/WIN is pressed it will map the keys back to "Qwerty".
+X11's XGrabKey() works partially with some application but not with others (e.g., gedit is not working). Since XGrabKey() is an X11 function with some support in Wayland, I was looking for a more stable solution. After a quick look to this [repo](https://github.com/kentonv/dvorak-qwerty), I saw that Kenton added a systemtap script to implement the mapping. It scared me a bit to follow the systemtap path, so I implemented an other solution based on /dev/uinput. The idea is to read /dev/input, grab keys with EVIOCGRAB, create a virtual device that can emit the keys and pass the keys from /dev/input to /dev/uinput. If L-CTRL, L-ALT, L-WIN is pressed it will map the keys back to "Qwerty".
 
-Kenton Varda reported that this project also works with Chrome OS if started as root.
-
-## Problems
-
-The mapping does not work with Eclipse. Regular typing uses Dvorak, while the shortcuts are using Qwerty (I have not figured out why). This results in a situation where a Qwerty key gets remapped according to the Dvorak mapping.
+This program is tested with Arch and Ubuntu, and Kenton Varda reported that it also works with Chrome OS.
 
 ## Installation
 
@@ -29,9 +23,24 @@ The file is triggered on the udev rule and call dvorak systemd service with the 
 the search term "keyb", that will match case insensitive the device name. Only a device with name that contains the substring
 "keyb" will be considered. To prevent an endless loop, the newly created virtual device is excluded from mapping itself.
 
-That way, dvorak will be called whenever an input device is attached.
+That way, the program ```dvorak``` will be called whenever an input device is attached.
 
-From here, ensure that your first keyboard layout is set to Qwerty and your second layout is Dvorak.
+If you have more mappings, e.g., a Dvorak mapping a non-Dvorak mapping, you can disable the mapping, as the shortcuts would be mappend as well, and for ctrl-c you need to press ctrl-i. To disable this mapping hit **3 times L-ALT** to disable the shortcut mapping.
+
+## Run
+
+Most likely, you will need to use sudo as it needs access to those input device. The following parameters can be used:
+
+```
+usage: dvorak [OPTION]
+  -u                    Enable Umlaut mapping.
+  -d /dev/input/by-id/… Specifies which device should be captured.
+  -m STRING             Match only the STRING with the USB device name. 
+                        STRING can contain multiple words, separated by space.
+
+example: dvorak -u -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
+```
+Once installed via ```make install```, the mapping will be applied whenever a keyboard is attached, as it listends to the udev event when a device is attached.
 
 ## Not a matching device: [xyz]
 
