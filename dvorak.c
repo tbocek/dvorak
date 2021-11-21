@@ -216,19 +216,15 @@ void usage(const char *path) {
 
 int main(int argc, char *argv[]) {
 
-    setuid(0);
-
     struct input_event ev;
+    struct uinput_setup usetup;
     ssize_t n;
     int fdi, fdo, i, mod_current, code, name_ret, mod_state = 0, array_qwerty_counter = 0, array_umlaut_counter = 0, lAlt = 0, opt;
     bool alt_gr = false, isDvorak = false, isUmlaut = false;
-    struct uinput_setup usetup;
-
     int array_qwerty[MAX_LENGTH] = {0}, array_umlaut[MAX_LENGTH] = {0};
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
 
-    char *device = NULL;
-    char *match = NULL;
+    char *device = NULL, *match = NULL;
     while ((opt = getopt(argc, argv, "ud:m:")) != -1) {
         switch (opt) {
             case 'u':
@@ -296,7 +292,6 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
     }
-
 
     fdo = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (fdo < 0) {
