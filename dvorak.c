@@ -252,7 +252,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-
     //the name and ids of the virtual keyboard, we need to define this now, as we need to ignore this to prevent
     //mapping the virtual keyboard
     memset(&usetup, 0, sizeof(usetup));
@@ -286,18 +285,20 @@ int main(int argc, char *argv[]) {
     // match names, reuse name_ret
     name_ret = -1;
 
-    char *token = strtok(match, " ");
-    while (token != NULL) {
-        if (strcasestr(keyboard_name, token) != NULL) {
-            printf("found input: [%s]\n", keyboard_name);
-            name_ret = 0;
-            break;
+    if(match != NULL) {
+        char *token = strtok(match, " ");
+        while (token != NULL) {
+            if (strcasestr(keyboard_name, token) != NULL) {
+                printf("found input: [%s]\n", keyboard_name);
+                name_ret = 0;
+                break;
+            }
+            token = strtok(NULL, " ");
         }
-        token = strtok(NULL, " ");
-    }
-    if (name_ret < 0) {
-        fprintf(stderr, "Not a matching device: [%s] does not match these words: [%s]\n", keyboard_name, match);
-        return EXIT_FAILURE;
+        if (name_ret < 0) {
+            fprintf(stderr, "Not a matching device: [%s] does not match these words: [%s]\n", keyboard_name, match);
+            return EXIT_FAILURE;
+        }
     }
 
 
