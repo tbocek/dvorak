@@ -481,7 +481,6 @@ int main(int argc, char *argv[]) {
                     } else {
                         array_umlaut[array_umlaut_counter++] = ev.code + 1; //0 means not mapped
                         code = umlaut2dvorak(ev.code); // dvorak mapping
-                        printf("SWI %d\n", code);
                     }
                 } else {
                     for (i = 0; i < array_umlaut_counter; i++) {
