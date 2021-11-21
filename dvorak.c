@@ -273,13 +273,9 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    if(strcmp(keyboard_name, "Virtual Dvorak Keyboard") == 0) {
+    if(strcmp(keyboard_name, usetup.name) == 0) {
+        fprintf(stdout, "Do not map the device we just created here: %s.\n", keyboard_name);
         return EXIT_SUCCESS;
-    }
-
-    if (strcasestr(keyboard_name, usetup.name) != NULL) {
-        fprintf(stderr, "Cannot get map the virtual device: %s.\n", keyboard_name);
-        return EXIT_FAILURE;
     }
 
     // match names, reuse name_ret
@@ -434,7 +430,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
             }
         } else if (ev.type == EV_KEY && (ev.value == 0 || ev.value == 1)) {
-            printf("%s 0x%04x (%d)\n", ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code);
+            //printf("%s 0x%04x (%d)\n", ev.value == 1 ? "pressed" : "released", (int) ev.code, (int) ev.code);
 
             //Umlaute mapping - since I want r-alt to produce umlauts without modifying
             if (ev.code == KEY_RIGHTALT) {
