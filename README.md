@@ -20,12 +20,12 @@ This program is tested with Arch and Ubuntu, and Kenton Varda reported that it a
 This will copy 3 files: dvorak, 80-dvorak.rules, and dvorak@.service
 
 The file is triggered on the udev rule and call dvorak systemd service with the device that was attached. The rule contains
-the search term "keyb", that will match case insensitive the device name. Only a device with name that contains the substring
-"keyb" will be considered. To prevent an endless loop, the newly created virtual device is excluded from mapping itself.
+the search term "keyb k360 k750", that will match case insensitive the device name. Only a device with name that contains the substring
+"keyb k360 k750" will be considered. To prevent an endless loop, the newly created virtual device is excluded from mapping itself. If your keyboard name does not match these keywords, then you have to add a keyword matching your keyboard.
 
 That way, the program ```dvorak``` will be called whenever an input device is attached.
 
-If you have more mappings, e.g., a Dvorak mapping a non-Dvorak mapping, you can disable the mapping, as the shortcuts would be mappend as well, and for ctrl-c you need to press ctrl-i. To disable this mapping hit **3 times L-ALT** to disable the shortcut mapping.
+If you have more mappings, e.g., a Dvorak mapping a non-Dvorak mapping, you can disable the mapping, as the shortcuts would be mappend as well, and for ctrl-c you need to press ctrl-i. To disable this mapping hit **3 times L-ALT** to disable the Dvorak <> Qwerty keyboard remapping.
 
 ## Run
 
@@ -41,6 +41,8 @@ usage: dvorak [OPTION]
 example: dvorak -u -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
 ```
 Once installed via ```make install```, the mapping will be applied whenever a keyboard is attached, as it listends to the udev event when a device is attached.
+
+The flag ```-u``` was added to remap some keys when using the ```Dvorak intl., with dead keys``` keyboard layout. Since this layout is handy for special characters it deviates too much from the original US-based Dvorak layout. So this -u flag maps some characters back. Only use this if you are using ```Dvorak intl., with dead keys```.
 
 ## Not a matching device: [xyz]
 
