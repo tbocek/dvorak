@@ -44,7 +44,7 @@
  * the keys from /dev/input to /dev/uinput. If CTRL/ALT/WIN is
  * pressed it will map the keys back to "Qwerty".
  *
- * Intallation
+ * Installation
  * ===========
  *
  * make dvorak
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
     struct uinput_setup usetup;
     ssize_t n;
     int fdi, fdo, i, mod_current, code, name_ret, mod_state = 0, array_qwerty_counter = 0, array_umlaut_counter = 0, lAlt = 0, opt;
-    bool alt_gr = false, isDvorak = false, isUmlaut = false;
+    bool alt_gr = false, isDvorak = false, isUmlaut = false, lshift = false, rshift = false;
     int array_qwerty[MAX_LENGTH] = {0}, array_umlaut[MAX_LENGTH] = {0};
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
 
@@ -429,11 +429,15 @@ int main(int argc, char *argv[]) {
 
             //Umlaute mapping - since I want r-alt to produce umlauts without modifying
             if (ev.code == KEY_RIGHTALT) {
-                if (ev.value == 1) { //pressed
-                    alt_gr = true;
-                } else { //released
-                    alt_gr = false;
-                }
+                alt_gr = ev.value == 1; //true if pressed
+            }
+
+            if (ev.code == KEY_RIGHTSHIFT) {
+                rshift = ev.value == 1; //true if pressed
+            }
+
+            if (ev.code == KEY_LEFTSHIFT) {
+                lshift = ev.value == 1; //true if pressed
             }
 
             mod_current = modifier_bit(ev.code);
@@ -445,9 +449,27 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            //The " and ¨, as well as ' and ´ should be swapped when using international dvorak layout
-            //The same goes for `(deadkey) and `(non-deadkey)
-            if (isUmlaut && (ev.code == KEY_Q || ev.code == KEY_GRAVE)) {
+            if (isUmlaut && (ev.code == KEY_6)) {
+                //remap the ^
+                if (ev.value == 1) {
+                    if((lshift || rshift) && !alt_gr) {
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 1);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    } else if((lAlt || rshift) && alt_gr) {
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    }
+                    emit(fdo, EV_KEY, ev.code, ev.value);
+                } else {
+                    if((lshift || rshift) && !alt_gr) {
+                        emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
+                        emit(fdo, EV_SYN, SYN_REPORT, 0);
+                    }
+                    emit(fdo, EV_KEY, ev.code, ev.value);
+                }
+            } else if (isUmlaut && (ev.code == KEY_Q || ev.code == KEY_GRAVE)) {
+                //The " and ¨, as well as ' and ´ should be swapped when using international dvorak layout
+                //The same goes for `(deadkey) and `(non-deadkey)
                 if (ev.value == 1) { //pressed
                     if (!alt_gr) {
                         emit(fdo, EV_KEY, KEY_RIGHTALT, 1);
@@ -457,13 +479,13 @@ int main(int argc, char *argv[]) {
                         emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
                         emit(fdo, EV_SYN, SYN_REPORT, 0);
                     }
-                    emit(fdo, EV_KEY, ev.code, 1);
+                    emit(fdo, EV_KEY, ev.code, ev.value);
                 } else {
                     if (!alt_gr) {
                         emit(fdo, EV_KEY, KEY_RIGHTALT, 0);
                         emit(fdo, EV_SYN, SYN_REPORT, 0);
                     }
-                    emit(fdo, EV_KEY, ev.code, 0);
+                    emit(fdo, EV_KEY, ev.code, ev.value);
                 }
             } else if (isUmlaut && ev.code != umlaut2dvorak(ev.code) && (alt_gr || array_umlaut_counter > 0)) {
                 code = ev.code;
