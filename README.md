@@ -46,7 +46,7 @@ The flag ```-u``` was added to remap some keys when using the ```Dvorak intl., w
 
 ## Not a matching device: [xyz]
 
-If you see the above message in syslog or journalctl, it means that your keyboard device name does not have the string "keyb" (case insensitive) in it. For example, ```Not a matching device: [Logitech K360]```. In order to make it work with your device, in dvorak@.service, you can call be the executable with
+If you see the above message in syslog or journalctl, it means that your keyboard device name does not have the string "keyb" (case insensitive) in it. For example, ```Not a matching device: [Logitech K360]```. In order to make it work with your device, in dvorak@.service, you can call the executable with
 
 ```
 ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360
