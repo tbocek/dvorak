@@ -97,6 +97,8 @@ static int modifier_bit(int key) {
             return 4;
         case KEY_LEFTMETA:
             return 8;
+        case KEY_CAPSLOCK:
+            return 16;
     }
     return 0;
 }
