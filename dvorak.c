@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
             case 'm':
                 match = optarg;
                 break;
-            case 'a':
+            case 't':
                 noToggle = true;
                 break;
             case '?':
