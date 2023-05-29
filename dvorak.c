@@ -212,7 +212,9 @@ void usage(const char *path) {
                     "Specifies which device should be captured.\n");
     fprintf(stderr, "  -m STRING\t\t"
                     "Match only the STRING with the USB device name. \n"
-                    "\t\t\tSTRING can contain multiple words, separated by space.\n\n");
+                    "\t\t\tSTRING can contain multiple words, separated by space.\n");
+    fprintf(stderr, "  -t\t\t\t"
+                    "Disable layout toggle feature (press Left-Alt 3 times to switch layout).\n\n");
     fprintf(stderr, "example: %s -u -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m \"k750 k350\"\n", basename);
 }
 
@@ -222,12 +224,12 @@ int main(int argc, char *argv[]) {
     struct uinput_setup usetup;
     ssize_t n;
     int fdi, fdo, i, mod_current, code, name_ret, mod_state = 0, array_qwerty_counter = 0, array_umlaut_counter = 0, lAlt = 0, opt;
-    bool alt_gr = false, isDvorak = false, isUmlaut = false, lshift = false, rshift = false;
+    bool alt_gr = false, isDvorak = false, isUmlaut = false, lshift = false, rshift = false, noToggle = false;
     int array_qwerty[MAX_LENGTH] = {0}, array_umlaut[MAX_LENGTH] = {0};
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
 
     char *device = NULL, *match = NULL;
-    while ((opt = getopt(argc, argv, "ud:m:")) != -1) {
+    while ((opt = getopt(argc, argv, "ud:m:t")) != -1) {
         switch (opt) {
             case 'u':
                 isUmlaut = true;
@@ -237,6 +239,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 match = optarg;
+                break;
+            case 't':
+                noToggle = true;
                 break;
             case '?':
                 usage(argv[0]);
@@ -410,9 +415,9 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        //if l-alt is pressed 3 times, the dvorak mapping is disabled, if it is
-        //again pressed 3 times, it will be enabled again
-        if (ev.code == 56) {
+        //when not disabled by the -t option, if l-alt is pressed 3 times, the dvorak mapping is disabled,
+        //if it is again pressed 3 times, it will be enabled again
+        if (!noToggle && ev.code == 56) {
             if (ev.value == 1 && ++lAlt >= 3) {
                 isDvorak = !isDvorak;
                 lAlt = 0;
