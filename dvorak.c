@@ -126,10 +126,10 @@ static int qwerty2dvorak(int key) {
             return KEY_APOSTROPHE;
         case KEY_EQUAL:
             return KEY_RIGHTBRACE;
-        case KEY_EACUTE:
-            return KEY_E;
-        case KEY_AGRAVE:
-            return KEY_W;
+        // case KEY_EACUTE:
+        //     return KEY_E;
+        // case KEY_AGRAVE:
+        //     return KEY_W;
         case KEY_Q:
             return KEY_X;
         case KEY_W:
