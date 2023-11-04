@@ -125,18 +125,14 @@ static int umlaut2dvorak(int key) {
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
-        case KEY_MINUS:
-            return KEY_APOSTROPHE;
-        case KEY_EQUAL:
-            return KEY_RIGHTBRACE;
-        // case KEY_EACUTE:
-        //     return KEY_E;
-        // case KEY_AGRAVE:
-        //     return KEY_W;
+        // case KEY_MINUS:
+        //     return KEY_APOSTROPHE;
+        // case KEY_EQUAL:
+        //     return KEY_RIGHTBRACE;
         case KEY_Q:
             return KEY_X;
-        case KEY_W:
-            return KEY_COMMA;
+        // case KEY_W:
+        //     return KEY_COMMA;
         case KEY_E:
             return KEY_F;
         case KEY_R:
@@ -144,7 +140,7 @@ static int qwerty2dvorak(int key) {
         case KEY_T:
             return KEY_K;
         case KEY_Y:
-            return KEY_T;
+            return KEY_Y;
         case KEY_U:
             return KEY_D;
         case KEY_I:
@@ -153,14 +149,14 @@ static int qwerty2dvorak(int key) {
             return KEY_A;
         case KEY_P:
             return KEY_R;
-        case KEY_LEFTBRACE:
-            return KEY_MINUS;
-        case KEY_RIGHTBRACE:
-            return KEY_EQUAL;
+        // case KEY_LEFTBRACE:
+        //     return KEY_MINUS;
+        // case KEY_RIGHTBRACE:
+        //     return KEY_EQUAL;
         case KEY_A:
             return KEY_S;
         case KEY_S:
-            return KEY_SEMICOLON;
+            return KEY_J;
         case KEY_D:
             return KEY_H;
         case KEY_F:
@@ -168,19 +164,19 @@ static int qwerty2dvorak(int key) {
         case KEY_G:
             return KEY_R;
         case KEY_H:
-            return KEY_Y;
-        case KEY_J:
-            return KEY_J;
+            return KEY_DOT;
+        // case KEY_J:
+        //     return KEY_J;
         case KEY_K:
             return KEY_P;
         case KEY_L:
             return KEY_M;
-        case KEY_SEMICOLON:
-            return KEY_M;
+        // case KEY_SEMICOLON:
+        //     return KEY_M;
         case KEY_APOSTROPHE:
             return KEY_Z;
-        case KEY_Z:
-            return KEY_Z;
+        // case KEY_Z:
+        //     return KEY_Z;
         case KEY_X:
             return KEY_N;
         case KEY_C:
