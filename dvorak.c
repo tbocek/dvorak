@@ -105,18 +105,18 @@ static int modifier_bit(int key) {
 
 static int umlaut2dvorak(int key) {
     switch (key) {
-        case KEY_A:
-            return KEY_X;
-        case KEY_X:
-            return KEY_A;
-        case KEY_S:
-            return KEY_R;
-        case KEY_R:
-            return KEY_S;
-        case KEY_F:
-            return KEY_T;
-        case KEY_T:
-            return KEY_F;
+        // case KEY_A:
+        //     return KEY_X;
+        // case KEY_X:
+        //     return KEY_A;
+        // case KEY_S:
+        //     return KEY_R;
+        // case KEY_R:
+        //     return KEY_S;
+        // case KEY_F:
+        //     return KEY_T;
+        // case KEY_T:
+        //     return KEY_F;
         default:
             return key;
     }
@@ -124,80 +124,113 @@ static int umlaut2dvorak(int key) {
 
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
+    // fprintf(stderr, "Key stroke: "); 
+    // fprintf(stderr,"%d", key);
+    // fprintf(stderr, "\n");
     switch (key) {
-        // CTRL-S
-        case KEY_A:
-            return KEY_S;
-        case KEY_S:
-            return KEY_J;
-        // case KEY_J:
-        //     return KEY_EQUAL;
-        // CTRL-X
-        case KEY_Q:
-            return KEY_X;
-        // CTRL-C
-        case KEY_C:
-            return KEY_I;
-        case KEY_COMMA:
-            return KEY_C;
-        // CTRL-V
-        case KEY_I:
-            return KEY_V;
-        case KEY_V:
-            return KEY_U;
-        // CTRL-Z
-        case KEY_APOSTROPHE: 
-            return KEY_Z;
-        case KEY_Z:
-            return KEY_RIGHTBRACE; 
-        // case KEY_W: 
-        //     return KEY_EQUAL;
-        // CTRL-R
-        case KEY_G:
-            return KEY_R;
-        case KEY_R:
-            return KEY_M;
-        case KEY_L:
-            return KEY_SEMICOLON;
-        // CTRL-T
-        case KEY_DOT:
-            return KEY_T;
-        case KEY_T:
-            return KEY_K;
-        // CTRL-P
-        case KEY_K: 
-            return KEY_P;
-        case KEY_P:
-            return KEY_MINUS;
-        // CTRL-E
-        case KEY_E:
-            return KEY_F;
-        // CTRL-Q
-        case KEY_O:
-            return KEY_Q;
-        // CTRL-D
-        case KEY_U:
-            return KEY_D;
-        case KEY_D:
-            return KEY_SEMICOLON;
-        case KEY_M:
-            return KEY_O;
-        // CTRL-F
-        case KEY_F:
-            return KEY_H;
-        case KEY_H:
-            return KEY_Y;
-        // CTRL-Y
-        case KEY_Y:
-            return KEY_B;
-        case KEY_B:
-            return KEY_G;
-        // CTRL-N
-        case KEY_N:
-            return KEY_L;
-        // case KEY_X:
-        //     return KEY_N;
+        // /1234567890**
+        case 41: // /
+            return 41;
+        case 2:  // <
+            return 2;
+        case 3:  // > 
+            return 3;
+        case 4:  // -
+            return 4;
+        case 5:  // *
+            return 5;
+        case 6:  // =
+            return 6;
+        case 7:  // $
+            return 7;
+        case 8:  // `
+            return 8;
+        case 9:  // (
+            return 9;
+        case 10:  // )
+            return 10;
+        case 11:  // "
+            return 11;
+        case 12:  // [
+            return 12;
+        case 13:  // ]
+            return 13;
 
+        // QWERTYUIOP**
+        case 16:  // :
+            return 45; // q
+        case 17:  // à
+            return 40; // w 
+        case 18:  // é
+            return 33; // e
+        case 19:  // g
+            return 50; // r
+        case 20:  // .
+            return 37; // t
+        case 21:  // h
+            return 48; // y
+        case 22:  // v
+            return 32; // u
+        case 23:  // c
+            return 47; // i
+        case 24:  // m
+            return 30; // o
+        case 25:  // k
+            return 52; // p
+        case 26:  // è
+            return 26;
+        case 27:  // z
+            return 27;
+
+        // QSDFGHJKL***
+        case 30:  // o
+            return 16; // a
+        case 31:  // a
+            return 36; // s
+        case 32:  // u
+            return 39; // d
+        case 33:  // e
+            return 35; // f
+        case 34:  // b
+            return 19; // g
+        case 35:  // f
+            return 21; // h
+        case 36:  // s
+            return 53; // j
+        case 37:  // t
+            return 25; // k
+        case 38:  // n
+            return 51; // l
+        case 39:  // d
+            return 39;
+        case 40:  // w
+            return 40; 
+        case 43:  // ù
+            return 43;
+
+        // _WXCVBN****
+        case 86:  // 
+           return 86;
+        case 44:  // ' 
+            return 27; // z
+        case 45:  // q
+            return 49; // x
+        case 46:  // ,
+            return 23; // c
+        case 47:  // i
+            return 22; // v
+        case 48:  // y
+            return 34; // b
+        case 49:  // x
+            return 49; // n
+        case 50:  // r
+            return 24; // m
+        case 51:  // l
+            return 51;
+        case 52:  // p
+            return 52;
+        case 53:  // j
+            return 53;
 
         default:
             return key;
