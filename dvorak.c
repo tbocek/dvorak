@@ -102,18 +102,18 @@ static int modifier_bit(int key) {
 
 static int umlaut2dvorak(int key) {
     switch (key) {
-        case KEY_A:
-            return KEY_X;
-        case KEY_X:
-            return KEY_A;
-        case KEY_S:
-            return KEY_R;
-        case KEY_R:
-            return KEY_S;
-        case KEY_F:
-            return KEY_T;
-        case KEY_T:
-            return KEY_F;
+        // case KEY_A:
+        //     return KEY_X;
+        // case KEY_X:
+        //     return KEY_A;
+        // case KEY_S:
+        //     return KEY_R;
+        // case KEY_R:
+        //     return KEY_S;
+        // case KEY_F:
+        //     return KEY_T;
+        // case KEY_T:
+        //     return KEY_F;
         default:
             return key;
     }
@@ -122,76 +122,18 @@ static int umlaut2dvorak(int key) {
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
-        case KEY_MINUS:
-            return KEY_LEFTBRACE;
-        case KEY_EQUAL:
-            return KEY_RIGHTBRACE;
-        case KEY_Q:
-            return KEY_X;
-        // case KEY_W:
-        //     return KEY_COMMA;
-        case KEY_E:
-            return KEY_F;
-        case KEY_R:
-            return KEY_O;
-        case KEY_T:
-            return KEY_K;
-        case KEY_Y:
-            return KEY_Y;
-        case KEY_U:
-            return KEY_D;
-        case KEY_I:
-            return KEY_V;
-        case KEY_O:
-            return KEY_A;
-        case KEY_P:
-            return KEY_P;
-        // case KEY_LEFTBRACE:
-        //     return KEY_LEFTBRACE;
-        // case KEY_RIGHTBRACE:
-        //     return KEY_RIGHTBRACE;
         case KEY_A:
             return KEY_S;
-        case KEY_S:
-            return KEY_J;
-        case KEY_D:
-            return KEY_H;
-        case KEY_F:
-            return KEY_H;
-        case KEY_G:
-            return KEY_R;
-        case KEY_H:
-            return KEY_DOT;
-        // case KEY_J:
-        //     return KEY_J;
-        case KEY_K:
-            return KEY_P;
-        case KEY_L:
-            return KEY_M;
-        // case KEY_SEMICOLON:
-        //     return KEY_M;
-        case KEY_APOSTROPHE:
-            return KEY_Z;
-        // case KEY_Z:
-        //     return KEY_Z;
-        case KEY_X:
-            return KEY_N;
-        case KEY_C:
-            return KEY_I;
-        case KEY_V:
-            return KEY_U;
-        case KEY_B:
-            return KEY_G;
-        case KEY_N:
-            return KEY_L;
-        case KEY_M:
-            return KEY_M;
+        case KEY_I:
+            return KEY_V;
         case KEY_COMMA:
             return KEY_C;
-        case KEY_DOT:
-            return KEY_T;
-        case KEY_SLASH:
-            return KEY_SLASH;
+        case KEY_APOSTROPHE:
+            return KEY_Z;
+        case KEY_G:
+            return KEY_R;
+        case KEY_Q:
+            return KEY_X;
         default:
             return key;
     }
