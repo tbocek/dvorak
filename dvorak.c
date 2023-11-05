@@ -102,18 +102,18 @@ static int modifier_bit(int key) {
 
 static int umlaut2dvorak(int key) {
     switch (key) {
-        // case KEY_A:
-        //     return KEY_X;
-        // case KEY_X:
-        //     return KEY_A;
-        // case KEY_S:
-        //     return KEY_R;
-        // case KEY_R:
-        //     return KEY_S;
-        // case KEY_F:
-        //     return KEY_T;
-        // case KEY_T:
-        //     return KEY_F;
+        case KEY_A:
+            return KEY_X;
+        case KEY_X:
+            return KEY_A;
+        case KEY_S:
+            return KEY_R;
+        case KEY_R:
+            return KEY_S;
+        case KEY_F:
+            return KEY_T;
+        case KEY_T:
+            return KEY_F;
         default:
             return key;
     }
@@ -155,78 +155,112 @@ static int qwerty2dvorak(int key) {
 
         // QWERTYUIOP**
         case 16:  // :
-            return 45; // q
+            // fprintf(stderr, "case 16 \n");
+            return 16; // unassigned
         case 17:  // à
+            // fprintf(stderr, "case 17 \n");
             return 40; // w 
         case 18:  // é
+            // fprintf(stderr, "case 18 \n");
             return 33; // e
         case 19:  // g
+            // fprintf(stderr, "case 19 \n");
             return 50; // r
         case 20:  // .
+            // fprintf(stderr, "case 20 \n");
             return 37; // t
         case 21:  // h
+            // fprintf(stderr, "case 21 \n");
             return 48; // y
         case 22:  // v
+            // fprintf(stderr, "case 22 \n");
             return 32; // u
         case 23:  // c
+            // fprintf(stderr, "case 23 \n");
             return 47; // i
         case 24:  // m
+            // fprintf(stderr, "case 24 \n");
             return 30; // o
         case 25:  // k
+            // fprintf(stderr, "case 25 \n");
             return 52; // p
         case 26:  // è
+            // fprintf(stderr, "case 26 \n");
             return 26;
         case 27:  // z
+            // fprintf(stderr, "case 27 \n");
             return 27;
 
         // QSDFGHJKL***
         case 30:  // o
-            return 16; // a
+            // fprintf(stderr, "case 30 \n");
+            return 31; // a
         case 31:  // a
+            // fprintf(stderr, "case 31 \n");
             return 36; // s
         case 32:  // u
+            // fprintf(stderr, "case 32 \n");
             return 39; // d
         case 33:  // e
+            // fprintf(stderr, "case 33 \n");
             return 35; // f
         case 34:  // b
+            // fprintf(stderr, "case 34 \n");
             return 19; // g
         case 35:  // f
+            // fprintf(stderr, "case 35 \n");
             return 21; // h
         case 36:  // s
+            // fprintf(stderr, "case 36 \n");
             return 53; // j
         case 37:  // t
+            // fprintf(stderr, "case 37 \n");
             return 25; // k
         case 38:  // n
+            // fprintf(stderr, "case 38 \n");
             return 51; // l
         case 39:  // d
+            // fprintf(stderr, "case 39 \n");
             return 39;
         case 40:  // w
+            // fprintf(stderr, "case 40 \n");
             return 40; 
         case 43:  // ù
+            // fprintf(stderr, "case 43 \n");
             return 43;
 
         // _WXCVBN****
         case 86:  // 
            return 86;
         case 44:  // ' 
+            // fprintf(stderr, "case 44 \n");
             return 27; // z
         case 45:  // q
+            // fprintf(stderr, "case 45 \n");
             return 49; // x
         case 46:  // ,
+            // fprintf(stderr, "case 46 \n");
             return 23; // c
         case 47:  // i
+            // fprintf(stderr, "case 47 \n");
             return 22; // v
         case 48:  // y
+            // fprintf(stderr, "case 48 \n");
             return 34; // b
         case 49:  // x
-            return 49; // n
+            // fprintf(stderr, "case 49\n");
+            return 38; // n
         case 50:  // r
+            // fprintf(stderr, "case 50 \n");
             return 24; // m
         case 51:  // l
+            // fprintf(stderr, "case 51 \n");
             return 51;
         case 52:  // p
+            // fprintf(stderr, "case 52 \n");
             return 52;
         case 53:  // j
+            // fprintf(stderr, "case 53 \n");
             return 53;
 
         default:
