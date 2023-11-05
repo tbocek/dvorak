@@ -125,10 +125,10 @@ static int umlaut2dvorak(int key) {
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
-        // case KEY_MINUS:
-        //     return KEY_APOSTROPHE;
-        // case KEY_EQUAL:
-        //     return KEY_RIGHTBRACE;
+        case KEY_MINUS:
+            return KEY_LEFTBRACE;
+        case KEY_EQUAL:
+            return KEY_RIGHTBRACE;
         case KEY_Q:
             return KEY_X;
         // case KEY_W:
@@ -148,11 +148,11 @@ static int qwerty2dvorak(int key) {
         case KEY_O:
             return KEY_A;
         case KEY_P:
-            return KEY_R;
+            return KEY_P;
         // case KEY_LEFTBRACE:
-        //     return KEY_MINUS;
+        //     return KEY_LEFTBRACE;
         // case KEY_RIGHTBRACE:
-        //     return KEY_EQUAL;
+        //     return KEY_RIGHTBRACE;
         case KEY_A:
             return KEY_S;
         case KEY_S:
