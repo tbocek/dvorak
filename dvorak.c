@@ -102,18 +102,18 @@ static int modifier_bit(int key) {
 
 static int umlaut2dvorak(int key) {
     switch (key) {
-        // case KEY_A:
-        //     return KEY_X;
-        // case KEY_X:
-        //     return KEY_A;
-        // case KEY_S:
-        //     return KEY_R;
-        // case KEY_R:
-        //     return KEY_S;
-        // case KEY_F:
-        //     return KEY_T;
-        // case KEY_T:
-        //     return KEY_F;
+        case KEY_A:
+            return KEY_X;
+        case KEY_X:
+            return KEY_A;
+        case KEY_S:
+            return KEY_R;
+        case KEY_R:
+            return KEY_S;
+        case KEY_F:
+            return KEY_T;
+        case KEY_T:
+            return KEY_F;
         default:
             return key;
     }
@@ -122,18 +122,80 @@ static int umlaut2dvorak(int key) {
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
+        // CTRL-S
         case KEY_A:
             return KEY_S;
-        case KEY_I:
-            return KEY_V;
-        case KEY_COMMA:
-            return KEY_C;
-        case KEY_APOSTROPHE:
-            return KEY_Z;
-        case KEY_G:
-            return KEY_R;
+        case KEY_S:
+            return KEY_J;
+        // case KEY_J:
+        //     return KEY_EQUAL;
+        // CTRL-X
         case KEY_Q:
             return KEY_X;
+        // CTRL-C
+        case KEY_C:
+            return KEY_I;
+        case KEY_COMMA:
+            return KEY_C;
+        // CTRL-V
+        case KEY_I:
+            return KEY_V;
+        case KEY_V:
+            return KEY_U;
+        // CTRL-Z
+        case KEY_APOSTROPHE: 
+            return KEY_Z;
+        case KEY_Z:
+            return KEY_RIGHTBRACE; 
+        // case KEY_W: 
+        //     return KEY_EQUAL;
+        // CTRL-R
+        case KEY_G:
+            return KEY_R;
+        case KEY_R:
+            return KEY_M;
+        case KEY_L:
+            return KEY_SEMICOLON;
+        // CTRL-T
+        case KEY_DOT:
+            return KEY_T;
+        case KEY_T:
+            return KEY_K;
+        // CTRL-P
+        case KEY_K: 
+            return KEY_P;
+        case KEY_P:
+            return KEY_MINUS;
+        // CTRL-E
+        case KEY_E:
+            return KEY_F;
+        // CTRL-Q
+        case KEY_O:
+            return KEY_Q;
+        // CTRL-D
+        case KEY_U:
+            return KEY_D;
+        case KEY_D:
+            return KEY_SEMICOLON;
+        case KEY_M:
+            return KEY_O;
+        // CTRL-F
+        case KEY_F:
+            return KEY_H;
+        case KEY_H:
+            return KEY_Y;
+        // CTRL-Y
+        case KEY_Y:
+            return KEY_B;
+        case KEY_B:
+            return KEY_G;
+        // CTRL-N
+        case KEY_N:
+            return KEY_L;
+        // case KEY_X:
+        //     return KEY_N;
+
+
         default:
             return key;
     }
