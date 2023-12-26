@@ -439,7 +439,7 @@ int main(int argc, char *argv[]) {
 
         //when not disabled by the -t option, if l-alt is pressed 3 times, the dvorak mapping is disabled,
         //if it is again pressed 3 times, it will be enabled again
-        if (!noToggle && ev.code == 56) {
+        if (!noToggle && ev.code == KEY_LEFTALT) {
             if (ev.value == 1 && ++lAlt >= 3) {
                 isDvorak = !isDvorak;
                 lAlt = 0;
