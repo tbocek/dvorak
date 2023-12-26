@@ -2,3 +2,5 @@ dvorak
 dvorak.o
 .project
 .idea
+.vscode
+.vscode/settings.json

@@ -14,6 +14,8 @@ This program is tested with Arch and Ubuntu, and Kenton Varda reported that it a
 
 ## Installation
 
+You need to install libevdev. On arch, install with pacman -S libevdev
+
  * create binary with ```make```
  * install it with ```sudo make install```
 
