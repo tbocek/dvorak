@@ -4,14 +4,13 @@
 TARGET = dvorak
 CC = gcc
 CFLAGS = -Wall -O3
-LDFLAGS = -levdev
 
 .PHONY: default all clean install uninstall
 
 default: all
 
 all: dvorak.c
-	$(CC) $(CFLAGS) -o $(TARGET) dvorak.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(TARGET) dvorak.c
 
 clean:
 	-rm -f *.o
