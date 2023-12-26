@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
 
     char *device = NULL, *match = NULL;
-    while ((opt = getopt(argc, argv, "ud:m:t")) != -1) {
+    while ((opt = getopt(argc, argv, "ud:m:tc")) != -1) {
         switch (opt) {
             case 'u':
                 isUmlaut = true;
