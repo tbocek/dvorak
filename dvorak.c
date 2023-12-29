@@ -72,7 +72,7 @@
 
 #define MAX_LENGTH 16
 
-static int emit(int fd, int type, int code, int val) {
+static int emit(int fd, __u16 type, __u16 code, __s32 val) {
     struct input_event ie;
     ie.type = type;
     ie.code = code;
@@ -505,7 +505,7 @@ int main(int argc, char *argv[]) {
                 }
             } else if (ev.code != qwerty2dvorak(ev.code) && (mod_state > 0 || array_qwerty_counter > 0)) {
                 code = ev.code;
-                //printf("dvorak %d, %d\n", array_counter, mod_state);
+                //printf("dvorak %d, %d\n", array_qwerty_counter, mod_state);
                 if (ev.value == 1) { //pressed
                     if (array_qwerty_counter == MAX_LENGTH) {
                         printf("warning, too many keys pressed: %d. %s 0x%04x (%d), arr:%d\n",
@@ -540,11 +540,12 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
+                //printf("Dvorak Key: %d 0x%04x => 0x%04x (%d, %d)\n", ev.value, (int)ev.code, code, (int)ev.code, code);
                 if (emit(fdo, ev.type, code, ev.value) < 0) {
                     fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
                 }
             } else {
-                //printf("non dvorak %d\n", array_counter);
+                //printf("Regular key: %d 0x%04x (%d)\n", ev.value, (int)ev.code, (int)ev.code);
                 if (emit(fdo, ev.type, ev.code, ev.value) < 0) {
                     fprintf(stderr, "Cannot write to device: %s.\n", strerror(errno));
                 }
