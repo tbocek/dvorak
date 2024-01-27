@@ -72,16 +72,16 @@
 
 #define MAX_LENGTH 16
 
-static int emit(int fd, __u16 type, __u16 code, __s32 val) {
-    struct input_event ie;
-    ie.type = type;
-    ie.code = code;
-    ie.value = val;
-    /* timestamp values below are ignored */
-    ie.time.tv_sec = 0;
-    ie.time.tv_usec = 0;
+static int emit(int fd, __u16 type, __u16 code, __s32 value) {
+    struct input_event ev;
 
-    return write(fd, &ie, sizeof(ie));
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = type;
+    ev.code = code;
+    ev.value = value;
+    gettimeofday(&ev.time, NULL);
+
+    return write(fd, &ev, sizeof(struct input_event));
 }
 
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
@@ -198,7 +198,7 @@ static int qwerty2dvorak(int key) {
     }
 }
 
-void usage(const char *path) {
+static void usage(const char *path) {
     /* take only the last portion of the path */
     const char *basename = strrchr(path, '/');
     basename = basename ? basename + 1 : path;
@@ -325,20 +325,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    //grab the key, from the input
-    //https://unix.stackexchange.com/questions/126974/where-do-i-find-ioctl-eviocgrab-documented/126996
-
-    //https://bugs.freedesktop.org/show_bug.cgi?id=101796
-    //the bug in the above tracker was fixed, but I still run into this issue, so sleep a bit to not have stuck
-    //keys when EVIOCGRAB is called
-    //quick workaround, sleep for 200ms...
-    usleep(200 * 1000);
-
-    if (ioctl(fdi, EVIOCGRAB, 1) < 0) {
-        fprintf(stderr, "Cannot grab key: %s.\n", strerror(errno));
-        return EXIT_FAILURE;
-    }
-
     // Keyboard
     if (ioctl(fdo, UI_SET_EVBIT, EV_KEY) < 0) {
         fprintf(stderr, "Cannot set ev key bits, key: %s.\n", strerror(errno));
@@ -356,7 +342,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         if (ioctl(fdo, UI_SET_KEYBIT, i) < 0) {
-            fprintf(stderr, "Cannot set ev bits: %s.\n", strerror(errno));
+            fprintf(stderr, "Cannot set ev bits %d: %s.\n", i, strerror(errno));
             return EXIT_FAILURE;
         }
     }
@@ -370,6 +356,13 @@ int main(int argc, char *argv[]) {
 
     if (ioctl(fdo, UI_DEV_CREATE) < 0) {
         fprintf(stderr, "Cannot create device: %s.\n", strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    //grab the key, from the input
+    //https://unix.stackexchange.com/questions/126974/where-do-i-find-ioctl-eviocgrab-documented/126996
+    if (ioctl(fdi, EVIOCGRAB, 1) < 0) {
+        fprintf(stderr, "Cannot grab key: %s.\n", strerror(errno));
         return EXIT_FAILURE;
     }
 
