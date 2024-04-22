@@ -72,10 +72,9 @@
 
 #define MAX_LENGTH 16
 
-static int emit(int fd, __u16 type, __u16 code, __s32 value) {
-    struct input_event ev;
+static int emit(const int fd, const __u16 type, const __u16 code, const __s32 value) {
+    struct input_event ev = {0};
 
-    memset(&ev, 0, sizeof(struct input_event));
     ev.type = type;
     ev.code = code;
     ev.value = value;
@@ -358,6 +357,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Cannot create device: %s.\n", strerror(errno));
         return EXIT_FAILURE;
     }
+
+    //we should flush fdi, but I am not sure how to do this, in the meantime, just wait and don´t press
+    //any key while starting longer than 200m
+    usleep(200000);
 
     //grab the key, from the input
     //https://unix.stackexchange.com/questions/126974/where-do-i-find-ioctl-eviocgrab-documented/126996
