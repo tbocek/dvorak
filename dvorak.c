@@ -61,6 +61,8 @@
  * https://gist.github.com/toinsson/7e9fdd3c908b3c3d3cd635321d19d44d
  *
  */
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
