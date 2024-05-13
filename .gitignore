@@ -1,4 +1,7 @@
 dvorak
 dvorak.o
+autoclicker
 .project
 .idea
+.vscode
+.vscode/settings.json
