@@ -52,6 +52,19 @@ If you see the above message in syslog or journalctl, it means that your keyboar
 ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360
 ```
 
+## Unistallation
+To unintall, you can type (if you are not root, use sudo):
+
+```
+systemctl stop 'dvorak@*.service'
+rm /usr/local/bin/dvorak
+rm /etc/udev/rules.d/80-dvorak.rules
+rm /etc/systemd/system/dvorak@.service
+udevadm control --reload
+systemctl restart systemd-udevd.service
+systemctl daemon-reload
+```
+
 ## Related Links
 I used the following sites for inspiration:
 
