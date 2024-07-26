@@ -72,6 +72,21 @@ systemctl restart systemd-udevd.service
 systemctl daemon-reload
 ```
 
+Certainly! Here's the revised version:
+
+---
+
+### Resolving a Boot Delay
+
+If you experience an x-minute boot delay after installing the script, it's likely due to the `systemd-udev-settle.service`. The code seems to call this service, causing the computer to wait for device initialization, which significantly slows down the boot process.
+
+This service is deprecated, and you can restore normal boot times by masking it with the following command:
+```bash
+systemctl mask systemd-udev-settle.service
+```
+
+---
+
 ## Related Links
 I used the following sites for inspiration:
 
