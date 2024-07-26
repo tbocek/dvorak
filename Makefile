@@ -25,6 +25,7 @@ install:
 	systemctl daemon-reload
 
 uninstall:
+	systemctl stop 'dvorak@*.service'
 	rm /usr/local/bin/dvorak
 	rm /etc/udev/rules.d/80-dvorak.rules
 	rm /etc/systemd/system/dvorak@.service

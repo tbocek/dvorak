@@ -53,7 +53,14 @@ ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360
 ```
 
 ## Unistallation
-To unintall, you can type (if you are not root, use sudo):
+
+To uninstall with make use:
+
+```
+
+```
+
+To uninstall manually, you can type (if you are not root, use sudo):
 
 ```
 systemctl stop 'dvorak@*.service'
