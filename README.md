@@ -52,6 +52,41 @@ If you see the above message in syslog or journalctl, it means that your keyboar
 ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360
 ```
 
+## Unistallation
+
+To uninstall with make use:
+
+```
+
+```
+
+To uninstall manually, you can type (if you are not root, use sudo):
+
+```
+systemctl stop 'dvorak@*.service'
+rm /usr/local/bin/dvorak
+rm /etc/udev/rules.d/80-dvorak.rules
+rm /etc/systemd/system/dvorak@.service
+udevadm control --reload
+systemctl restart systemd-udevd.service
+systemctl daemon-reload
+```
+
+Certainly! Here's the revised version:
+
+---
+
+### Resolving a Boot Delay
+
+If you experience an x-minute boot delay after installing the script, it's likely due to the `systemd-udev-settle.service`. The code seems to call this service, causing the computer to wait for device initialization, which significantly slows down the boot process.
+
+This service is deprecated, and you can restore normal boot times by masking it with the following command:
+```bash
+systemctl mask systemd-udev-settle.service
+```
+
+---
+
 ## Related Links
 I used the following sites for inspiration:
 
