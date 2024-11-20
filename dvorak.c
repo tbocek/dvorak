@@ -369,6 +369,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    fprintf(stderr, "Staring event loop with keyboard: [%s] for device [%s].\n", keyboard_name, device);
+
     while (1) {
         n = read(fdi, &ev, sizeof ev);
 
