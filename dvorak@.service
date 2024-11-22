@@ -3,3 +3,5 @@ Description=Dvorak Virtual Keyboard
 
 [Service]
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i
+StandardOutput=null
+StandardError=journal
