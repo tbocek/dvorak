@@ -409,7 +409,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Start the uinput setup
-    int fdo = open("/dev/uinput", O_WRONLY);
+    int fdo = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (fdo < 0) {
         fprintf(stderr, "Error: Failed to open /dev/uinput for device [%s]: %s.\n", device, strerror(errno));
         close(fdi);
