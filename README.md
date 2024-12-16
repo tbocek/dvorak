@@ -57,7 +57,7 @@ ExecStart=/usr/bin/dvorak /dev/input/%i keyb k360
 To uninstall with make use:
 
 ```
-
+sudo make uninstall
 ```
 
 To uninstall manually, you can type (if you are not root, use sudo):
@@ -71,10 +71,6 @@ udevadm control --reload
 systemctl restart systemd-udevd.service
 systemctl daemon-reload
 ```
-
-Certainly! Here's the revised version:
-
----
 
 ### Resolving a Boot Delay
 
