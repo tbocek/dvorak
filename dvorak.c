@@ -76,7 +76,7 @@
 
 static int fdi;
 static volatile sig_atomic_t keep_running = 1;
-static void sig_handler(int sig) {
+static void sig_handler() {
     keep_running = 0;
     close(fdi);
 }
@@ -191,7 +191,7 @@ static bool has_event_type(const unsigned int array_bit_ev[], int event_type) {
     return (array_bit_ev[event_type/32] & (1U << (event_type % 32))) != 0;
 }
 
-static bool setup_event_type(int fdi, int fdo, unsigned long event_type, int max_val, const unsigned int array_bit[]) {
+static bool setup_event_type(int fdo, unsigned long event_type, int max_val, const unsigned int array_bit[]) {
     struct uinput_abs_setup abs_setup = {};
     bool abs_init_once = false;
 
@@ -424,35 +424,35 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    if(!setup_event_type(fdi, fdo, UI_SET_EVBIT, EV_SW, array_bit_ev)) {
+    if(!setup_event_type(fdo, UI_SET_EVBIT, EV_SW, array_bit_ev)) {
         fprintf(stderr, "Cannot setup_event_type for UI_SET_EVBIT/device [%s]: %s.\n", device, strerror(errno));
         close(fdo);
         close(fdi);
         return EXIT_FAILURE;
     }
 
-    if(!setup_event_type(fdi, fdo, UI_SET_KEYBIT, KEY_MAX, array_bit_key)) {
+    if(!setup_event_type(fdo, UI_SET_KEYBIT, KEY_MAX, array_bit_key)) {
         fprintf(stderr, "Cannot setup_event_type for EV_KEY/device [%s]: %s.\n", device, strerror(errno));
         close(fdo);
         close(fdi);
         return EXIT_FAILURE;
     }
 
-    if(!setup_event_type(fdi, fdo, UI_SET_RELBIT, REL_MAX, array_bit_rel)) {
+    if(!setup_event_type(fdo, UI_SET_RELBIT, REL_MAX, array_bit_rel)) {
         fprintf(stderr, "Cannot setup_event_type for EV_REL/device [%s]: %s.\n", device, strerror(errno));
         close(fdo);
         close(fdi);
         return EXIT_FAILURE;
     }
 
-    if(!setup_event_type(fdi, fdo, UI_SET_ABSBIT, ABS_MAX, array_bit_abs)) {
+    if(!setup_event_type(fdo, UI_SET_ABSBIT, ABS_MAX, array_bit_abs)) {
         fprintf(stderr, "Cannot setup_event_type for EV_ABS/device [%s]: %s.\n", device, strerror(errno));
         close(fdo);
         close(fdi);
         return EXIT_FAILURE;
     }
 
-    if(!setup_event_type(fdi, fdo, UI_SET_MSCBIT, MSC_MAX, array_bit_msc)) {
+    if(!setup_event_type(fdo, UI_SET_MSCBIT, MSC_MAX, array_bit_msc)) {
         fprintf(stderr, "Cannot setup_event_type for MSC_MAX/device [%s]: %s.\n", device, strerror(errno));
         close(fdo);
         close(fdi);
