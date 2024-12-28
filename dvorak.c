@@ -74,11 +74,11 @@
 //a key combination has a maximum amount of 8 characters. That should be enough.
 #define MAX_LENGTH 8
 
+static int fdi;
 static volatile sig_atomic_t keep_running = 1;
 static void sig_handler(int sig) {
-    if (sig == SIGTERM) {
-        keep_running = 0;
-    }
+    keep_running = 0;
+    close(fdi);
 }
 
 //from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Start the fdi setup
-    int fdi = open(device, O_RDONLY);
+    fdi = open(device, O_RDONLY);
     if (fdi < 0) {
         fprintf(stderr, "Error: Failed to open device [%s]: %s.\n", device, strerror(errno));
         fprintf(stderr, "Hint: Check if the device path is correct and you have the necessary permissions.\n");
