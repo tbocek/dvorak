@@ -76,7 +76,7 @@
 
 static int fdi;
 static volatile sig_atomic_t keep_running = 1;
-static void sig_handler() {
+static void sig_handler(int sig) {
     keep_running = 0;
     close(fdi);
 }
