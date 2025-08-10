@@ -8,7 +8,7 @@ With X11 I was relying on the [xdq](https://github.com/kentonv/dvorak-qwerty) fr
 
 ## Keyboard remapping with dvorak that works reliably with Wayland - make ctrl-c ctrl-c again (and not ctrl-i)
 
-X11's XGrabKey() works partially with some application but not with others (e.g., gedit is not working). Since XGrabKey() is an X11 function with some support in Wayland, I was looking for a more stable solution. After a quick look to this [repo](https://github.com/kentonv/dvorak-qwerty), I saw that Kenton added a systemtap script to implement the mapping. It scared me a bit to follow the systemtap path, so I implemented an other solution based on /dev/uinput. The idea is to read /dev/input, grab keys with EVIOCGRAB, create a virtual device that can emit the keys and pass the keys from /dev/input to /dev/uinput. If L-CTRL, L-ALT, L-WIN is pressed it will map the keys back to "Qwerty".
+X11's XGrabKey() works partially with some application but not with others (e.g., gedit is not working). Since XGrabKey() is an X11 function with some support in Wayland, I was looking for a more stable solution. After a quick look to this [repo](https://github.com/kentonv/dvorak-qwerty), I saw that Kenton added a systemtap script to implement the mapping. It scared me a bit to follow the systemtap path, so I implemented an other solution based on /dev/uinput. The idea is to read /dev/input, grab keys with EVIOCGRAB, create a virtual device that can emit the keys and pass the keys from /dev/input to /dev/uinput. If L-CTRL, R-CTRL, L-ALT, L-WIN, CAPSLOCK is pressed it will map the keys back to "Qwerty".
 
 This program is tested with Arch and Ubuntu, and Kenton Varda reported that it also works with Chrome OS.
 
@@ -37,6 +37,8 @@ usage: dvorak [OPTION]
   -d /dev/input/by-id/… Specifies which device should be captured.
   -m STRING             Match only the STRING with the USB device name. 
                         STRING can contain multiple words, separated by space.
+  -t                    Disable layout toggle feature (press Left-Alt 3 times to switch layout).
+  -c                    Disable caps lock as a modifier.
 
 example: dvorak -u -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
 ```
