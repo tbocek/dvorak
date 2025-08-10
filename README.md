@@ -2,7 +2,7 @@
 
 Since I type with the "Dvorak" keyboard layout, the shortcuts such as ctrl-c, ctrl-x, or ctrl-v are not comfortable anymore for using the left hand only.
 
-Furthermore, many applications have their default shortcuts, which I'm used to. So for these shortcuts I prefer "Querty". Since there is no way to configure this, this program intercept these keys and remap them from "Dvorak" to "Querty" when pressing L-CTRL, R-CTRL, L-ALT, L-WIN, CAPSLOCK, or any of those combinations. CAPSLOCK can also be used as a modifier, but can be disabled with the "-c" flag
+Furthermore, many applications have their default shortcuts, which I'm used to. So for these shortcuts I prefer "Qwerty". Since there is no way to configure this, this program intercept these keys and remap them from "Dvorak" to "Qwerty" when pressing L-CTRL, R-CTRL, L-ALT, L-WIN, CAPSLOCK, or any of those combinations. CAPSLOCK is also used as a modifier, but can be disabled with the "-c" flag.
    
 With X11 I was relying on the [xdq](https://github.com/kentonv/dvorak-qwerty) from Kenton Varda. However, this does not work reliably with Wayland.
 
