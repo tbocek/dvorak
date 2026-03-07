@@ -6,6 +6,9 @@
 #   dvorak-signal.sh on    # SIGUSR1 — enable Dvorak mapping
 #   dvorak-signal.sh off   # SIGUSR2 — passthrough mode
 #
+# Automatically elevates to root via sudo if needed (dvorak daemons run as root).
+# Requires a sudoers rule for non-interactive use — see examples/dvorak-signal-sudoers.
+#
 # Works with:
 #   1. PID files (reads from /run/dvorak-*.pid by default)
 #   2. Falls back to pkill if no PID files found/valid
@@ -31,6 +34,13 @@ case "$1" in
     off) SIG="USR2" ;;
     *)   usage ;;
 esac
+
+# Auto-elevate: dvorak daemons run as root, signaling them requires root.
+# Uses sudo -n (non-interactive) so it fails immediately with a clear error
+# instead of hanging waiting for a password (e.g., when called from a keybinding).
+if [[ $EUID -ne 0 ]]; then
+    exec sudo -n -- "$0" "$@"
+fi
 
 sent=0
 
