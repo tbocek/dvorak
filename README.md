@@ -167,6 +167,7 @@ dvorak-signal.sh on     # all daemons -> Dvorak remapping enabled
 #### Step 7 (optional): Integrate with your desktop layout switcher
 
 An example Sway layout switching script is provided at `examples/sway_layout_switch_example.sh`. It switches the Sway keyboard layout and automatically signals all `dvorak` daemons:
+Alternatively, you can use layout switcher of your choice, and use examples/sway_layout_watcher.sh to watch for layout changes and send signals accordingly. sway_layout_watcher script has additional benefit of being compatible with swaykbd
 
 * Switching to Dvorak (index 0) sends `dvorak-signal.sh on`
 * Switching to any other layout sends `dvorak-signal.sh off`
