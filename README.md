@@ -167,22 +167,9 @@ dvorak-signal.sh on     # all daemons -> Dvorak remapping enabled
 #### Step 7 (optional): Integrate with your desktop layout switcher
 
 An example Sway layout switching script is provided at `examples/sway_layout_switch_example.sh`. It switches the Sway keyboard layout and automatically signals all `dvorak` daemons:
-Alternatively, you can use layout switcher of your choice, and use examples/sway_layout_watcher.sh to watch for layout changes and send signals accordingly. sway_layout_watcher script has additional benefit of being compatible with swaykbd
 
 * Switching to Dvorak (index 0) sends `dvorak-signal.sh on`
 * Switching to any other layout sends `dvorak-signal.sh off`
-
-Assuming you have the following swing configuration:
-
-```
-input type:keyboard {
-    xkb_layout  us,us,ua,ru
-    xkb_variant dvorak,,,
-    repeat_delay 500
-    repeat_rate  40
-}
-
-```
 
 To use it with Sway, copy it to your scripts directory and bind it to a key:
 
@@ -197,13 +184,12 @@ Add to your Sway config (`~/.config/sway/config`):
 # Cycle layouts with Super+Space
 bindsym $mod+space exec ~/.config/sway/scripts/layout_switch.sh
 
-# Switch to a specific layout
+# Or switch to a specific layout
 bindsym $mod+F1 exec ~/.config/sway/scripts/layout_switch.sh dvorak
 bindsym $mod+F2 exec ~/.config/sway/scripts/layout_switch.sh us
 bindsym $mod+F3 exec ~/.config/sway/scripts/layout_switch.sh ua
 bindsym $mod+F4 exec ~/.config/sway/scripts/layout_switch.sh ru
 ```
-
 
 Adapt the layout names and indices in the script to match your Sway input configuration.
 
@@ -211,10 +197,21 @@ Adapt the layout names and indices in the script to match your Sway input config
 
 Most likely, you will need to use sudo as it needs access to input devices. The following parameters can be used:
 
-usage: dvorak [OPTION] -d /dev/input/by-id/... Specifies which device should be captured. -m STRING Match only the STRING with the USB device name. STRING can contain multiple words, separated by space. -t Disable layout toggle feature (press Left-Alt 3 times to switch layout). -c Disable caps lock as a modifier. -p FILE Write PID to FILE (useful for daemon mode).
-Signals: SIGUSR1 Enable Dvorak mapping (on). SIGUSR2 Disable mapping / passthrough (off).
-example: dvorak -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
+```
+usage: dvorak [OPTION]
+  -d /dev/input/by-id/...   Specifies which device should be captured.
+  -m STRING                 Match only the STRING with the USB device name.
+                            STRING can contain multiple words, separated by space.
+  -t                        Disable layout toggle feature (press Left-Alt 3 times to switch layout).
+  -c                        Disable caps lock as a modifier.
+  -p FILE                   Write PID to FILE (useful for daemon mode).
 
+Signals:
+  SIGUSR1                   Enable Dvorak mapping (on).
+  SIGUSR2                   Disable mapping / passthrough (off).
+
+example: dvorak -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
+```
 
 Once installed via `make install` or systemd services, the mapping will be applied whenever a keyboard is attached.
 
@@ -227,13 +224,15 @@ If you have more mappings, e.g., a Dvorak mapping and a non-Dvorak mapping, you 
 
 If you see the above message in syslog or journalctl, it means that your keyboard device name does not have a matching string in it. For example, `Not a matching device: [Logitech K360]`. In order to make it work with your device, add the relevant keyword to the `-m` parameter in your service file:
 
+```
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i -m "keyb k360"
-
+```
 
 Or if using the `dvorak-start.sh` approach, pass the full device name:
 
+```
 ExecStart=/usr/local/bin/dvorak-start.sh "Logitech K360"
-
+```
 
 ## Troubleshooting
 
@@ -244,51 +243,67 @@ The `dvorak` daemons run as root (started via systemd). If you see `Operation no
 1. **Is the sudoers rule installed?**
    ```bash
    sudo cat /etc/sudoers.d/dvorak-signal
-Is your user in the input group?
-bash
+   ```
+2. **Is your user in the `input` group?**
+   ```bash
+   groups | grep input
+   ```
+   If not: `sudo usermod -aG input $USER` then **log out and back in**.
+3. **Is the sudoers file valid?**
+   ```bash
+   sudo visudo -cf /etc/sudoers.d/dvorak-signal
+   ```
 
+### Signal script works from terminal but not from keybinding
 
-groups | grep input
-If not: sudo usermod -aG input $USER then log out and back in.
-Is the sudoers file valid?
-bash
+Most likely your user was just added to the `input` group but hasn't logged out and back in yet. Group changes only take effect on new login sessions.
 
+### Stale PID files
 
-sudo visudo -cf /etc/sudoers.d/dvorak-signal
-Signal script works from terminal but not from keybinding
-Most likely your user was just added to the input group but hasn't logged out and back in yet. Group changes only take effect on new login sessions.
-Stale PID files
-If dvorak-signal.sh reports stale PID files, it means a previous dvorak process was killed with SIGKILL (which cannot be caught, so the PID file wasn't cleaned up). The PID files live in /run (tmpfs), so they are automatically cleared on reboot. To clean them manually:
-bash
+If `dvorak-signal.sh` reports stale PID files, it means a previous `dvorak` process was killed with SIGKILL (which cannot be caught, so the PID file wasn't cleaned up). The PID files live in `/run` (tmpfs), so they are automatically cleared on reboot. To clean them manually:
 
-
+```bash
 sudo rm -f /run/dvorak-*.pid
-Uninstallation
+```
+
+## Uninstallation
+
 To uninstall the basic installation:
 
-
+```
 sudo make uninstall
+```
+
 To fully uninstall everything (basic + signal support), run:
-bash
 
-
+```bash
 # Stop all running services
 sudo systemctl stop 'dvorak@*.service'
 sudo systemctl stop 'dvorak-usb@*.service'
 sudo systemctl disable 'dvorak@*.service'
 sudo systemctl disable 'dvorak-usb@*.service'
-Remove binaries and scripts
-sudo rm -f /usr/local/bin/dvorak sudo rm -f /usr/local/bin/dvorak-start.sh sudo rm -f /usr/local/bin/dvorak-signal.sh
-Remove udev rules and service files
-sudo rm -f /etc/udev/rules.d/80-dvorak.rules sudo rm -f /etc/systemd/system/dvorak@.service sudo rm -f /etc/systemd/system/dvorak-usb@*.service
-Remove sudoers rule
+
+# Remove binaries and scripts
+sudo rm -f /usr/local/bin/dvorak
+sudo rm -f /usr/local/bin/dvorak-start.sh
+sudo rm -f /usr/local/bin/dvorak-signal.sh
+
+# Remove udev rules and service files
+sudo rm -f /etc/udev/rules.d/80-dvorak.rules
+sudo rm -f /etc/systemd/system/dvorak@.service
+sudo rm -f /etc/systemd/system/dvorak-usb@*.service
+
+# Remove sudoers rule
 sudo rm -f /etc/sudoers.d/dvorak-signal
-Clean up PID files
+
+# Clean up PID files
 sudo rm -f /run/dvorak-*.pid
-Reload
-sudo udevadm control --reload sudo systemctl restart systemd-udevd.service sudo systemctl daemon-reload
 
-
+# Reload
+sudo udevadm control --reload
+sudo systemctl restart systemd-udevd.service
+sudo systemctl daemon-reload
+```
 
 ---
 
