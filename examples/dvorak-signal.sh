@@ -14,7 +14,8 @@
 #   2. Falls back to pkill if no PID files found/valid
 #
 
-set -euo pipefail
+set -uo pipefail
+shopt -s nullglob
 
 PIDFILE_DIR="/run"
 PIDFILE_GLOB="dvorak-*.pid"
@@ -27,7 +28,7 @@ usage() {
     exit 1
 }
 
-[ $# -eq 1 ] || usage
+[[ $# -eq 1 ]] || usage
 
 case "$1" in
     on)  SIG="USR1" ;;
@@ -39,40 +40,54 @@ esac
 # Uses sudo -n (non-interactive) so it fails immediately with a clear error
 # instead of hanging waiting for a password (e.g., when called from a keybinding).
 if [[ $EUID -ne 0 ]]; then
-    exec sudo -n -- "$0" "$@"
+    SELF="$(realpath "$0" 2>/dev/null || readlink -f "$0")"
+    exec sudo -n -- "$SELF" "$@"
 fi
 
 sent=0
+failed=0
 
 # Try PID files first
 for pidfile in "${PIDFILE_DIR}"/${PIDFILE_GLOB}; do
-    [ -f "$pidfile" ] || continue
-    pid=$(cat "$pidfile" 2>/dev/null) || true
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-        proc_name=$(cat "/proc/$pid/comm" 2>/dev/null) || true
-        if [ "$proc_name" = "dvorak" ]; then
-            if kill -s "$SIG" "$pid" 2>/dev/null; then
-                echo "Sent SIG${SIG} to PID ${pid} (from ${pidfile})"
-                sent=$((sent + 1))
-            else
-                echo "Warning: failed to signal PID ${pid} (from ${pidfile})" >&2
-            fi
-        else
-            echo "Warning: PID ${pid} from ${pidfile} is not dvorak (is: ${proc_name:-unknown})" >&2
-        fi
+    pid=$(cat "$pidfile" 2>/dev/null) || continue
+    [[ "$pid" =~ ^[0-9]+$ ]] || { echo "Warning: corrupt PID file ${pidfile}" >&2; failed=$((failed + 1)); continue; }
+
+    if ! kill -0 "$pid" 2>/dev/null; then
+        echo "Warning: stale PID file ${pidfile} (pid=${pid})" >&2
+        failed=$((failed + 1))
+        continue
+    fi
+
+    proc_name=$(cat "/proc/$pid/comm" 2>/dev/null) || true
+    if [[ "$proc_name" != "$PROCESS_NAME" ]]; then
+        echo "Warning: PID ${pid} from ${pidfile} is not dvorak (is: ${proc_name:-unknown})" >&2
+        failed=$((failed + 1))
+        continue
+    fi
+
+    if kill -s "$SIG" "$pid" 2>/dev/null; then
+        echo "Sent SIG${SIG} to PID ${pid} (from ${pidfile})"
+        sent=$((sent + 1))
     else
-        echo "Warning: stale PID file ${pidfile} (pid=${pid:-empty})" >&2
+        echo "Warning: failed to signal PID ${pid} (from ${pidfile})" >&2
+        failed=$((failed + 1))
     fi
 done
 
 # Fall back to pkill if no valid PID files were found
-if [ "$sent" -eq 0 ]; then
-    if pgrep -x "$PROCESS_NAME" >/dev/null 2>&1; then
-        pkill -"$SIG" -x "$PROCESS_NAME" || true
-        count=$(pgrep -cx "$PROCESS_NAME" 2>/dev/null || echo "?")
-        echo "Sent SIG${SIG} to ${count} '${PROCESS_NAME}' process(es) via pkill"
+if [[ $sent -eq 0 ]]; then
+    if pkill -"$SIG" -x "$PROCESS_NAME" 2>/dev/null; then
+        echo "Sent SIG${SIG} to '${PROCESS_NAME}' process(es) via pkill"
     else
         echo "Error: no running '${PROCESS_NAME}' processes found." >&2
         exit 1
     fi
 fi
+
+# Partial success = non-zero exit so callers can detect
+if [[ $failed -gt 0 ]]; then
+    echo "Warning: ${failed} pidfile(s) had issues (${sent} signaled successfully)" >&2
+    exit 2
+fi
+
+exit 0
