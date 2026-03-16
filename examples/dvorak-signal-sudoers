@@ -1,0 +1,16 @@
+# Allow users in the 'input' group to signal dvorak daemons without a password.
+# The dvorak daemons run as root, so signaling them requires root privileges.
+#
+# Install:
+#   sudo cp examples/dvorak-signal-sudoers /etc/sudoers.d/dvorak-signal
+#   sudo chmod 440 /etc/sudoers.d/dvorak-signal
+#
+# Verify:
+#   sudo visudo -cf /etc/sudoers.d/dvorak-signal
+#
+# Security note: the script path must be root-owned (/usr/local/bin/), never
+# a user-writable location like ~/.config/. A sudoers rule pointing to a
+# user-writable file would allow arbitrary code execution as root.
+
+%input ALL=(root) NOPASSWD: /usr/local/bin/dvorak-signal.sh on
+%input ALL=(root) NOPASSWD: /usr/local/bin/dvorak-signal.sh off

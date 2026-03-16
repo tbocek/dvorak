@@ -1,0 +1,14 @@
+[Unit]
+Description=Dvorak remapping - Glove80 USB
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/dvorak-start.sh "MoErgo Glove80 Left Keyboard"
+Restart=always
+RestartSec=1
+StartLimitIntervalSec=30
+StartLimitBurst=60
+
+[Install]
+WantedBy=multi-user.target
