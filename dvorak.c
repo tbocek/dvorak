@@ -262,17 +262,17 @@ static bool emit(int fd, int type, int code, int value, struct timeval time) {
     ev.time = time;
     //fprintf(stdout, "Emit event type=%d code=%d value=%d\n",ev.type, ev.code, ev.value);
 
-    if (type == EV_KEY) {
-        if (value == 1 || value == 2) {
-            keys_pressed_set(code);
-        } else if (value == 0) {
-            keys_pressed_clear(code);
-        }
-    }
-
     ssize_t n = write(fd, &ev, sizeof(ev));
-    if (n == (ssize_t)sizeof(ev))
+    if (n == (ssize_t)sizeof(ev)) {
+        if (type == EV_KEY) {
+            if (value == 1 || value == 2) {
+                keys_pressed_set(code);
+            } else if (value == 0) {
+                keys_pressed_clear(code);
+            }
+        }
         return true;
+    }
     if (n < 0) {
         fprintf(stderr, "emit write failed: %s\n", strerror(errno));
     } else {
@@ -473,8 +473,9 @@ int main(int argc, char *argv[]) {
     //Start the fdi setup
     int fdi = open(device, O_RDONLY);
     if (fdi < 0) {
-        fprintf(stderr, "Error: Failed to open device [%s]: %s.\n", device, strerror(errno));
-        return (errno == ENOENT || errno == ENODEV) ? EXIT_DEVICE_GONE : EXIT_FAILURE;
+        int saved_errno = errno;
+        fprintf(stderr, "Error: Failed to open device [%s]: %s.\n", device, strerror(saved_errno));
+        return (saved_errno == ENOENT || saved_errno == ENODEV) ? EXIT_DEVICE_GONE : EXIT_FAILURE;
     }
 
     char keyboard_name[UINPUT_MAX_NAME_SIZE] = "Unknown";
@@ -509,7 +510,7 @@ int main(int argc, char *argv[]) {
         char *token = strtok(match_copy, " ");
         while (token != NULL) {
             if (strcasestr(keyboard_name, token) != NULL) {
-                printf("Info: Found matching input: [%s] for device [%s].\n", keyboard_name, device);
+                fprintf(stdout, "Info: Found matching input: [%s] for device [%s].\n", keyboard_name, device);
                 found = true;
                 break;
             }
@@ -604,7 +605,7 @@ int main(int argc, char *argv[]) {
        !setup_event_type(fdi, fdo, UI_SET_RELBIT, REL_MAX + 1, array_bit_rel) ||
        !setup_event_type(fdi, fdo, UI_SET_ABSBIT, ABS_MAX + 1, array_bit_abs) ||
        !setup_event_type(fdi, fdo, UI_SET_MSCBIT, MSC_MAX + 1, array_bit_msc)) {
-        fprintf(stderr, "Cannot setup event types for device [%s]: %s.\n", device, strerror(errno));
+        fprintf(stderr, "Cannot setup event types for device [%s].\n", device);
         close(fdo);
         close(fdi);
         return EXIT_FAILURE;
@@ -646,11 +647,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (ioctl(fdi, EVIOCGRAB, 1) < 0) {
-        fprintf(stderr, "Cannot grab device: %s.\n", strerror(errno));
+        int saved_errno = errno;
+        fprintf(stderr, "Cannot grab device: %s.\n", strerror(saved_errno));
         ioctl(fdo, UI_DEV_DESTROY);
         close(fdo);
         close(fdi);
-        return (errno == ENODEV) ? EXIT_DEVICE_GONE : EXIT_FAILURE;
+        return (saved_errno == ENODEV) ? EXIT_DEVICE_GONE : EXIT_FAILURE;
     }
 
     struct input_event ev = {0};
