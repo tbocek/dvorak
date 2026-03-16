@@ -87,17 +87,18 @@
  *
  */
 #define _GNU_SOURCE
-#include <errno.h>
-#include <fcntl.h>
-#include <linux/uinput.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <linux/uinput.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <signal.h>
+#include <sys/time.h>
 
+//a key combination has a maximum amount of 8 characters. That should be enough.
 #define MAX_LENGTH 8
 #define KEY_COUNT (KEY_MAX + 1)
 
@@ -138,6 +139,7 @@ static void sigusr2_handler(int sig) {
     pending_mode = MODE_OFF;
 }
 
+//from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int modifier_bit(int key) {
     switch (key) {
         case KEY_LEFTCTRL:
@@ -155,6 +157,7 @@ static int modifier_bit(int key) {
     }
 }
 
+//from: https://github.com/kentonv/dvorak-qwerty/tree/master/unix
 static int qwerty2dvorak(int key) {
     switch (key) {
         case KEY_MINUS:
@@ -257,6 +260,7 @@ static bool emit(int fd, int type, int code, int value, struct timeval time) {
     ev.code = code;
     ev.value = value;
     ev.time = time;
+    //fprintf(stdout, "Emit event type=%d code=%d value=%d\n",ev.type, ev.code, ev.value);
 
     if (type == EV_KEY) {
         if (value == 1 || value == 2) {
@@ -310,6 +314,7 @@ static bool setup_event_type(int fdi, int fdo, unsigned long event_type, int max
             continue;
         }
 
+        //fprintf(stderr, "Setting capability %d for event type %lu\n", i, event_type);
         switch(event_type) {
             case UI_SET_EVBIT:
                 if (ioctl(fdo, UI_SET_EVBIT, i) < 0) {
@@ -465,6 +470,7 @@ int main(int argc, char *argv[]) {
         atexit(cleanup_pidfile);
     }
 
+    //Start the fdi setup
     int fdi = open(device, O_RDONLY);
     if (fdi < 0) {
         fprintf(stderr, "Error: Failed to open device [%s]: %s.\n", device, strerror(errno));
@@ -568,7 +574,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Check we are a keyboard — exit 0 (not a keyboard) so wrapper tries next
+    //Check we are a keyboard
     if (!(array_bit_key[KEY_X / 32] & (1U << (KEY_X % 32))) ||
         !(array_bit_key[KEY_C / 32] & (1U << (KEY_C % 32))) ||
         !(array_bit_key[KEY_V / 32] & (1U << (KEY_V % 32)))) {
@@ -577,6 +583,7 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
+    // Start the uinput setup
     int fdo = open("/dev/uinput", O_WRONLY);
     if (fdo < 0) {
         fprintf(stderr, "Error: Failed to open /dev/uinput: %s.\n", strerror(errno));
@@ -584,6 +591,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Configure the virtual device
     if (ioctl(fdo, UI_DEV_SETUP, &usetup) < 0) {
         fprintf(stderr, "Error: Failed to configure virtual device: %s.\n", strerror(errno));
         close(fdo);
@@ -609,7 +617,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Wait for virtual device to settle
+    // Wait for device to be ready
     usleep(200000);
 
     // Wait until all physical keys are released before grabbing
@@ -713,15 +721,19 @@ int main(int argc, char *argv[]) {
 
             if (mod_current > 0) {
                 if (ev.value != 0) {
+                    //set mod state when either 1 (key press), or 2 (repeat)
                     mod_state |= mod_current;
                 } else {
+                    //remove mod state when 0 (released)
                     mod_state &= ~mod_current;
                 }
             }
 
             int qwerty_code = qwerty2dvorak(ev.code);
             if (ev.code != qwerty_code) {
+                //pressed key
                 if (ev.value == 1) {
+                    //modifier pressed
                     if(mod_state > 0) {
                         if (array_qwerty_counter == MAX_LENGTH) {
                             fprintf(stderr, "warning, too many keys pressed: %d. 0x%04x (%d), arr:%d\n",
@@ -729,12 +741,15 @@ int main(int argc, char *argv[]) {
                                 array_qwerty_counter);
                         } else {
                             array_qwerty[array_qwerty_counter++] = (unsigned int)qwerty_code;
+                            //remap to qwerty - press key
                             emit(fdo, ev.type, qwerty_code, ev.value, ev.time);
                         }
                     } else {
+                        //no modifier
                         emit(fdo, ev.type, ev.code, ev.value, ev.time);
                     }
                 } else if(ev.value == 2) {
+                    //repeating button
                     bool is_in_array = false;
                     for (int i = 0; i < array_qwerty_counter; i++) {
                         if (array_qwerty[i] == (unsigned int)qwerty_code) {
@@ -743,11 +758,14 @@ int main(int argc, char *argv[]) {
                         }
                     }
                     if(is_in_array) {
+                        //this is a repeating qwerty
                         emit(fdo, ev.type, qwerty_code, ev.value, ev.time);
                     } else {
+                        //not in the array, regular key
                         emit(fdo, ev.type, ev.code, ev.value, ev.time);
                     }
                 } else if(ev.value == 0) {
+                    //release the key
                     bool need_emit = false;
                     for (int i = 0; i < array_qwerty_counter; i++) {
                         if (array_qwerty[i] == (unsigned int)qwerty_code) {
@@ -764,17 +782,22 @@ int main(int argc, char *argv[]) {
                             }
                         }
                         array_qwerty_counter = last_nonzero + 1;
+                        //remap to qwerty - release key
                         emit(fdo, ev.type, qwerty_code, ev.value, ev.time);
                     } else {
+                        //regular dvorak key
                         emit(fdo, ev.type, ev.code, ev.value, ev.time);
                     }
                 } else {
+                    //this should not happen
                     emit(fdo, ev.type, ev.code, ev.value, ev.time);
                 }
             } else {
+                //regular dvorak key
                 emit(fdo, ev.type, ev.code, ev.value, ev.time);
             }
         } else {
+            //non regular key
             emit(fdo, ev.type, ev.code, ev.value, ev.time);
         }
     }
