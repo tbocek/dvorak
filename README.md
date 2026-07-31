@@ -202,6 +202,9 @@ usage: dvorak [OPTION]
   -d /dev/input/by-id/...   Specifies which device should be captured.
   -m STRING                 Match only the STRING with the USB device name.
                             STRING can contain multiple words, separated by space.
+  -i STRING                 Ignore devices whose name matches STRING.
+                            STRING can contain multiple words, separated by space.
+                            Takes precedence over -m.
   -t                        Disable layout toggle feature (press Left-Alt 3 times to switch layout).
   -c                        Disable caps lock as a modifier.
   -p FILE                   Write PID to FILE (useful for daemon mode).
@@ -211,6 +214,7 @@ Signals:
   SIGUSR2                   Disable mapping / passthrough (off).
 
 example: dvorak -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m "k750 k350"
+example: dvorak -d /dev/input/event1 -i "virtual clickmate"
 ```
 
 Once installed via `make install` or systemd services, the mapping will be applied whenever a keyboard is attached.
@@ -227,6 +231,20 @@ If you see the above message in syslog or journalctl, it means that your keyboar
 ```
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i -m "keyb k360"
 ```
+
+The complement of `-m` is `-i`: instead of listing every keyboard to capture, list
+the device names to skip. This is useful with the udev rule, which starts an
+instance for *every* input device that appears — including the virtual devices
+created by other remappers. Grabbing such a device applies the Dvorak mapping a
+second time, so a key that should arrive as `d` arrives as `e`:
+
+```
+ExecStart=/usr/local/bin/dvorak -d /dev/input/%i -i virtual
+```
+
+A device matching both `-i` and `-m` is ignored. Ignoring is not an error: dvorak
+logs one line (`dvorak: ignoring [Clickmate Virtual Device 0] (matched "virtual")`)
+and exits with status 0, without ever grabbing the device.
 
 Or if using the `dvorak-start.sh` approach, pass the full device name:
 

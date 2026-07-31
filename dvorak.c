@@ -362,6 +362,32 @@ static bool setup_event_type(int fdi, int fdo, unsigned long event_type, int max
     return true;
 }
 
+/*
+ * Match the device name against a space separated list of keywords. Each
+ * keyword is compared case-insensitively as a substring of the name.
+ * Returns 1 on a match (and copies the matching keyword to matched),
+ * 0 if no keyword matches, -1 on allocation failure.
+ */
+static int match_keywords(const char *name, const char *keywords, char *matched, size_t matched_len) {
+    char *copy = strdup(keywords);
+    if (copy == NULL) {
+        fprintf(stderr, "Error: strdup failed\n");
+        return -1;
+    }
+    int result = 0;
+    for (char *token = strtok(copy, " "); token != NULL; token = strtok(NULL, " ")) {
+        if (strcasestr(name, token) != NULL) {
+            if (matched != NULL && matched_len > 0) {
+                snprintf(matched, matched_len, "%s", token);
+            }
+            result = 1;
+            break;
+        }
+    }
+    free(copy);
+    return result;
+}
+
 static void usage(const char *path) {
     /* take only the last portion of the path */
     const char *basename = strrchr(path, '/');
@@ -373,6 +399,10 @@ static void usage(const char *path) {
     fprintf(stderr, "  -m STRING\t\t"
                     "Match only the STRING with the USB device name. \n"
                     "\t\t\tSTRING can contain multiple words, separated by space.\n");
+    fprintf(stderr, "  -i STRING\t\t"
+                    "Ignore devices whose name matches STRING. \n"
+                    "\t\t\tSTRING can contain multiple words, separated by space.\n"
+                    "\t\t\tTakes precedence over -m.\n");
     fprintf(stderr, "  -t\t\t\t"
                     "Disable layout toggle feature (press Left-Alt 3 times to switch layout).\n");
     fprintf(stderr, "  -c\t\t\t"
@@ -385,6 +415,7 @@ static void usage(const char *path) {
     fprintf(stderr, "  SIGUSR2\t\t"
                     "Disable mapping / passthrough (off).\n\n");
     fprintf(stderr, "example: %s -d /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-kbd -m \"k750 k350\"\n", basename);
+    fprintf(stderr, "example: %s -d /dev/input/event1 -i \"virtual clickmate\"\n", basename);
 }
 
 static bool write_pidfile(const char *path) {
@@ -430,16 +461,20 @@ int main(int argc, char *argv[]) {
 
     int opt;
     char *device = NULL,
-         *match = NULL;
+         *match = NULL,
+         *ignore = NULL;
     bool noToggle = false,
          noCapsLockAsModifier = false;
-    while ((opt = getopt(argc, argv, "d:m:p:tc")) != -1) {
+    while ((opt = getopt(argc, argv, "d:m:i:p:tc")) != -1) {
         switch (opt) {
             case 'd':
                 device = optarg;
                 break;
             case 'm':
                 match = optarg;
+                break;
+            case 'i':
+                ignore = optarg;
                 break;
             case 'p':
                 pidfile_path = optarg;
@@ -499,29 +534,34 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
-    if (match != NULL) {
-        char *match_copy = strdup(match);
-        if (match_copy == NULL) {
-            fprintf(stderr, "Error: strdup failed\n");
+    // The ignore list wins over -m: it is checked first and never grabs the device.
+    if (ignore != NULL) {
+        char matched[UINPUT_MAX_NAME_SIZE] = {0};
+        int ignored = match_keywords(keyboard_name, ignore, matched, sizeof(matched));
+        if (ignored < 0) {
             close(fdi);
             return EXIT_FAILURE;
         }
-        bool found = false;
-        char *token = strtok(match_copy, " ");
-        while (token != NULL) {
-            if (strcasestr(keyboard_name, token) != NULL) {
-                fprintf(stdout, "Info: Found matching input: [%s] for device [%s].\n", keyboard_name, device);
-                found = true;
-                break;
-            }
-            token = strtok(NULL, " ");
+        if (ignored) {
+            // udev starts an instance per device, so skipping is normal, not an error.
+            fprintf(stderr, "dvorak: ignoring [%s] (matched \"%s\")\n", keyboard_name, matched);
+            close(fdi);
+            return EXIT_SUCCESS;
         }
-        free(match_copy);
+    }
+
+    if (match != NULL) {
+        int found = match_keywords(keyboard_name, match, NULL, 0);
+        if (found < 0) {
+            close(fdi);
+            return EXIT_FAILURE;
+        }
         if (!found) {
             fprintf(stderr, "Error: Device [%s] does not match any specified keywords.\n", keyboard_name);
             close(fdi);
             return EXIT_FAILURE;
         }
+        fprintf(stdout, "Info: Found matching input: [%s] for device [%s].\n", keyboard_name, device);
     }
 
     // Read capabilities
