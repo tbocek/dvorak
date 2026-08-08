@@ -50,7 +50,8 @@ This allows an external script, desktop shortcut, or layout-switching hook to te
 │   ├── dvorak-signal.sh         # send on/off signals to all dvorak daemons
 │   ├── dvorak-start.sh          # daemon launcher with retry, cleanup, and PID files
 │   ├── dvorak-usb.service       # systemd template service for dvorak-start.sh
-│   └── sway_layout_switch_example.sh  # example Sway layout switcher with signal integration
+│   ├── sway_layout_switch_example.sh  # example Sway layout switcher with signal integration
+│   └── sway_layout-watcher.sh   # watches Sway input events and signals on layout change
 ├── LICENSE
 ├── Makefile
 └── README.md
@@ -60,7 +61,7 @@ This allows an external script, desktop shortcut, or layout-switching hook to te
 
 ### Option A: Basic installation (udev-triggered)
 
-This is the simplest setup. It automatically starts `dvorak` whenever a matching keyboard is attached, but does **not** support signal-based mode switching.
+This is the simplest setup. It automatically starts `dvorak` whenever a keyboard is attached.
 
 ```bash
 make
@@ -69,9 +70,19 @@ sudo make install
 
 This will copy 3 files: `dvorak`, `80-dvorak.rules`, and `dvorak@.service`.
 
-The udev rule triggers the `dvorak` systemd service whenever an input device is attached. The rule contains a search term (e.g., `"keyb k360 k750"`) that matches the device name case-insensitively. Only devices whose name contains a matching substring will be considered. The newly created virtual device is excluded from mapping itself to prevent an endless loop.
+The udev rule matches **every** input device (`SUBSYSTEM=="input", KERNEL=="event[0-9]*"`) and starts one `dvorak@<eventN>.service` instance per device — it contains no device filter of its own. Filtering happens inside `dvorak`, which exits 0 without grabbing anything when the device:
 
-If your keyboard name does not match the default keywords, edit the udev rule and service file to add a keyword matching your keyboard.
+* has no `X`/`C`/`V` keys, i.e. is not a keyboard (mice, power buttons, audio jacks — the common case),
+* is dvorak's own `Virtual Dvorak Keyboard` output device, which is always refused so the mapping cannot be applied twice,
+* matches a `-i` keyword, or fails to match a `-m` keyword, if either option is given.
+
+So the default installation captures *all* keyboards. To restrict it to specific ones, or to skip virtual devices created by other remappers, add `-m` / `-i` to `ExecStart` in `/etc/systemd/system/dvorak@.service` — not to the udev rule:
+
+```
+ExecStart=/usr/local/bin/dvorak -d /dev/input/%i -m "keyb k360 k750"
+```
+
+The signal interface itself still works here — `sudo pkill -SIGUSR2 -x dvorak` switches every daemon to passthrough. What this setup does *not* install is `dvorak-signal.sh`, the sudoers rule that lets a non-root user send those signals, or PID files. Add `-p /run/dvorak-%i.pid` to `ExecStart` for PID files, or use Option B for the complete arrangement.
 
 ### Option B: Installation with signal support (recommended for multi-layout setups)
 
@@ -107,10 +118,11 @@ sudo chmod 755 /usr/local/bin/dvorak-start.sh
 ```
 
 `dvorak-start.sh` takes a keyboard name as an argument and:
-* Searches `/sys/class/input/` for a device matching the given name
-* Retries for up to 120 seconds (useful for USB devices that appear after boot)
+* Searches `/sys/class/input/*/device/name` for devices whose name contains the given string. Unlike dvorak's `-m`, this match is **case-sensitive** (`grep -F`), so the name must be spelled as it appears in `/proc/bus/input/devices`
+* Retries for up to 180 seconds (90 attempts, 2 seconds apart) — useful for USB devices that appear after boot
 * Kills any stale `dvorak` process already holding the device
 * Starts `dvorak` with a PID file at `/run/dvorak-<eventN>.pid`
+* Tries each matching event node in turn: exit code 0 means "not a keyboard" (a keyboard usually exposes several event nodes, only one of which carries the keys), so the script moves on to the next candidate. Any other exit code means the real keyboard was found, and the script exits so systemd can restart it
 
 #### Step 3: Install the signal script
 
@@ -224,9 +236,15 @@ If you have more mappings, e.g., a Dvorak mapping and a non-Dvorak mapping, you 
 1. **Signal-based (recommended):** use `dvorak-signal.sh off` to switch all daemons to passthrough, and `dvorak-signal.sh on` to re-enable. Once controlled by signals, the keyboard toggle is suppressed — only another signal can change the mode.
 2. **Keyboard toggle:** press **3 times L-ALT** to toggle the Dvorak-to-Qwerty remapping on or off. This only works when the mode has not been set by a signal. Can be disabled with the `-t` flag.
 
-## Not a matching device: [xyz]
+## Selecting and excluding devices
 
-If you see the above message in syslog or journalctl, it means that your keyboard device name does not have a matching string in it. For example, `Not a matching device: [Logitech K360]`. In order to make it work with your device, add the relevant keyword to the `-m` parameter in your service file:
+If you see this in `journalctl`:
+
+```
+Error: Device [Logitech K360] does not match any specified keywords.
+```
+
+it means a `-m` was given but the device name does not contain any of its keywords, so the device was left alone (exit code 1). Add the relevant keyword to the `-m` parameter in your service file:
 
 ```
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i -m "keyb k360"
@@ -251,6 +269,18 @@ Or if using the `dvorak-start.sh` approach, pass the full device name:
 ```
 ExecStart=/usr/local/bin/dvorak-start.sh "Logitech K360"
 ```
+
+## Exit codes
+
+Because udev starts an instance for every input device, most instances are expected to exit immediately. The exit code says why, and wrapper scripts rely on it:
+
+| Code | Meaning |
+|------|---------|
+| `0` | Nothing to do, or done. Either the device was skipped without ever being grabbed — not a keyboard, excluded by `-i`, or dvorak's own virtual device — in which case a wrapper should try the next candidate; or a running daemon shut down cleanly on `SIGTERM`/`SIGINT` |
+| `1` | Configuration or setup error — no `-d` given, `-m` matched nothing, `/dev/uinput` unavailable, or the device could not be grabbed because another process holds it. Retrying will not help |
+| `2` | The device disappeared at runtime, or the virtual device stopped accepting writes. Restarting is appropriate |
+
+All diagnostics are written to **stderr**, so they appear in `journalctl -u 'dvorak@*'` even though `dvorak@.service` sets `StandardOutput=null`.
 
 ## Troubleshooting
 

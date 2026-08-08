@@ -1,7 +1,21 @@
 [Unit]
 Description=Dvorak Virtual Keyboard
+# Instances are started by 80-dvorak.rules whenever an input node appears.
+# Restarting is shared between udev and systemd: a device that goes away and
+# comes back gets a fresh "add" event, but a flaky keyboard can also fail
+# *without* leaving — an I/O error mid-read, or a drop-and-return so fast the
+# old instance still holds this unit active when the add event fires. Both end
+# with dvorak exited and the device present, which no udev event will ever fix.
+StartLimitIntervalSec=0
 
 [Service]
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i
+# Exit 2 means "device gone or unreadable, try again" (dvorak.c), and open()
+# on a still-absent node also exits 2 — so this retries once a second until
+# the device is back, however it left. Exit 0 ("not a keyboard, skipped")
+# stays stopped. StartLimitIntervalSec=0 above keeps a flapping device from
+# parking the unit in "failed" after five quick restarts.
+Restart=on-failure
+RestartSec=1
 StandardOutput=null
 StandardError=journal
