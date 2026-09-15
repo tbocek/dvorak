@@ -9,12 +9,9 @@ Description=Dvorak Virtual Keyboard
 StartLimitIntervalSec=0
 
 [Service]
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=50
 ExecStart=/usr/local/bin/dvorak -d /dev/input/%i
-# Exit 2 means "device gone or unreadable, try again" (dvorak.c), and open()
-# on a still-absent node also exits 2 — so this retries once a second until
-# the device is back, however it left. Exit 0 ("not a keyboard, skipped")
-# stays stopped. StartLimitIntervalSec=0 above keeps a flapping device from
-# parking the unit in "failed" after five quick restarts.
 Restart=on-failure
 RestartSec=1
 StandardOutput=null
