@@ -154,18 +154,24 @@ sudo cp examples/dvorak-usb.service /etc/systemd/system/dvorak-usb@.service
 sudo systemctl daemon-reload
 ```
 
-Enable and start one instance per keyboard, using the keyboard name as the instance identifier:
+Find the exact keyboard name (the match is case-sensitive):
 
 ```bash
-sudo systemctl enable --now "dvorak-usb@Logitech K750.service"
-sudo systemctl enable --now "dvorak-usb@Das Keyboard.service"
+grep '^N: Name=' /proc/bus/input/devices
+```
+
+Enable and start one instance per keyboard, using the keyboard name as the instance identifier. Escape the name with `systemd-escape`, otherwise systemd turns any `-` in the name into `/` and the keyboard is never found:
+
+```bash
+sudo systemctl enable --now "dvorak-usb@$(systemd-escape 'Logitech K750').service"
+sudo systemctl enable --now "dvorak-usb@$(systemd-escape 'Das Keyboard').service"
 ```
 
 Check the status:
 
 ```bash
-systemctl status "dvorak-usb@Logitech K750.service"
-journalctl -u "dvorak-usb@Logitech K750.service" -f
+systemctl status "dvorak-usb@$(systemd-escape 'Logitech K750').service"
+journalctl -u "dvorak-usb@$(systemd-escape 'Logitech K750').service" -f
 ```
 
 #### Step 6: Test signaling
