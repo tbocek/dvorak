@@ -359,6 +359,9 @@ sudo systemctl restart systemd-udevd.service
 sudo systemctl daemon-reload
 ```
 
+### Other Solutions for Dvorak Remapping
+ * https://github.com/godkinmo/omarchy-plugin-omarchy-dvp-qwerty-toggle using https://github.com/jtroo/kanata
+
 ---
 
 ## Related Links
